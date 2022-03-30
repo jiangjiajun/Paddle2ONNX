@@ -35,7 +35,7 @@ def export(model_filename,
         verbose, enable_onnx_checker, enable_experimental_op, enable_optimize)
     if save_file is not None:
         with open(save_file, "wb") as f:
-            f.write(onnx_proto.SerializeToString())
+            f.write(onnx_proto_str)
     else:
         return onnx_proto_str
 
