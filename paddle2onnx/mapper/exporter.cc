@@ -384,14 +384,18 @@ ONNX_NAMESPACE::ModelProto ModelExporter::Optimize(
       .registerPass<ONNX_NAMESPACE::optimization::EliminateNonTranspose>();
   ONNX_NAMESPACE::optimization::Optimizer::passes
       .registerPass<ONNX_NAMESPACE::optimization::FuseConstantCast>();
-  std::vector<std::string> passes = {
-      "eliminate_identity", "eliminate_deadend", "eliminate_deadend",
-      "fuse_constant_reshape", "fuse_constant_unsqueeze",
-      //                                     "fuse_constant_cast",
-      "fuse_paddle_conv_bias", //"fuse_unsqueeze_conv2d_squeeze",
-      "fuse_consecutive_transposes", "eliminate_non_transpose",
-      "fuse_matmul_add_bias_into_gemm", "eliminate_identity",
-      "eliminate_deadend", "eliminate_unused_initializer"};
+  std::vector<std::string> passes = {"eliminate_identity",
+                                     "eliminate_deadend",
+                                     "eliminate_deadend",
+                                     "fuse_constant_reshape",
+                                     "fuse_constant_unsqueeze",
+                                     "fuse_paddle_conv_bias",
+                                     "fuse_consecutive_transposes",
+                                     "eliminate_non_transpose",
+                                     "fuse_matmul_add_bias_into_gemm",
+                                     "eliminate_identity",
+                                     "eliminate_deadend",
+                                     "eliminate_unused_initializer"};
   return ONNX_NAMESPACE::optimization::Optimize(model, passes);
 }
 

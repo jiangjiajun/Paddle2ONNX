@@ -14,6 +14,8 @@
 
 #pragma once
 #include <stdlib.h>
+#include <iostream>
+#include <sstream>
 #include <string>
 
 namespace paddle2onnx {
@@ -24,4 +26,45 @@ inline void Assert(bool condition, const std::string& message) {
     std::abort();
   }
 }
+
+class P2OLogger {
+ public:
+  P2OLogger() {
+    line_ = "";
+    verbose_ = true;
+  }
+  explicit P2OLogger(bool verbose) {
+    verbose_ = verbose;
+    line_ = "";
+  }
+
+  template <typename T>
+  P2OLogger& operator<<(const T& val) {
+    if (!verbose_) {
+      return *this;
+    }
+    std::stringstream ss;
+    ss << val;
+    line_ += ss.str();
+    return *this;
+  }
+  P2OLogger& operator<<(std::ostream& (*os)(std::ostream&)) {
+    if (!verbose_) {
+      return *this;
+    }
+    std::cout << line_ << std::endl;
+    line_ = "";
+    return *this;
+  }
+  ~P2OLogger() {
+    if (!verbose_ && line_ != "") {
+      std::cout << line_ << std::endl;
+    }
+  }
+
+ private:
+  std::string line_;
+  bool verbose_ = true;
+};
+
 }  // namespace paddle2onnx
