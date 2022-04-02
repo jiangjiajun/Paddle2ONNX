@@ -15,19 +15,21 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 
 class MeshgridMapper : public Mapper {
  public:
-  MeshgridMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  MeshgridMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                 int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     MarkAsExperimentalOp();
   }
 
   int32_t GetMinOpset(bool verbose = false) { return 8; }
-  void Opset8(OnnxHelper* helper);
+  void Opset8();
 };
 
 }  // namespace paddle2onnx

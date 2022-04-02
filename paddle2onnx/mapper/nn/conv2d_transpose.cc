@@ -24,25 +24,23 @@ REGISTER_MAPPER(depthwise_conv2d_transpose, Conv2dTransposeMapper)
 int32_t Conv2dTransposeMapper::GetMinOpset(bool verbose) {
   // NHWC is not supported
   if (data_format_ == "NHWC") {
-    if (verbose) {
-      std::cerr << "[ERROR] Cannot support NHWC format for operator "
-                   "conv2d_transpose/depthwise_conv2d_transpose."
-                << std::endl;
-    }
+    Error() << "[ERROR] Cannot support NHWC format for operator "
+               "conv2d_transpose/depthwise_conv2d_transpose."
+            << std::endl;
     return -1;
   }
   return 7;
 }
 
-void Conv2dTransposeMapper::Opset7(OnnxHelper* helper) {
+void Conv2dTransposeMapper::Opset7() {
   auto kernel_info = GetInput("Filter");
   auto input_info = GetInput("Input");
   auto output_info = GetOutput("Output");
-  auto input = helper->AutoCast(input_info[0].name, input_info[0].dtype,
-                                P2ODataType::FP32);
-  auto kernel = helper->AutoCast(kernel_info[0].name, kernel_info[0].dtype,
+  auto input = helper_->AutoCast(input_info[0].name, input_info[0].dtype,
                                  P2ODataType::FP32);
-  auto node = helper->MakeNode("ConvTranspose", {input, kernel});
+  auto kernel = helper_->AutoCast(kernel_info[0].name, kernel_info[0].dtype,
+                                  P2ODataType::FP32);
+  auto node = helper_->MakeNode("ConvTranspose", {input, kernel});
   AddAttribute(node, "dilations", dilations_);
   std::vector<int64_t> kernel_shape = {kernel_info[0].shape[2],
                                        kernel_info[0].shape[3]};
@@ -61,8 +59,8 @@ void Conv2dTransposeMapper::Opset7(OnnxHelper* helper) {
   if (output_padding_.size() > 0) {
     AddAttribute(node, "output_padding", output_padding_);
   }
-  helper->AutoCast(node->output(0), output_info[0].name, P2ODataType::FP32,
-                   output_info[0].dtype);
+  helper_->AutoCast(node->output(0), output_info[0].name, P2ODataType::FP32,
+                    output_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

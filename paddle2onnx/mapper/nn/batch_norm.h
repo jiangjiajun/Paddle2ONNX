@@ -22,13 +22,14 @@ namespace paddle2onnx {
 
 class BatchNormMapper : public Mapper {
  public:
-  BatchNormMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  BatchNormMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                  int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("epsilon", &epsilon_);
     GetAttr("momentum", &momentum_);
   }
 
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 
  private:
   float epsilon_;

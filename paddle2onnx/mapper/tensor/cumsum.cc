@@ -19,13 +19,13 @@ REGISTER_MAPPER(cumsum, CumsumMapper)
 
 int32_t CumsumMapper::GetMinOpset(bool verbose) { return 11; }
 
-void CumsumMapper::Opset11(OnnxHelper* helper) {
+void CumsumMapper::Opset11() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
   std::string axis_node =
-      helper->Constant({1}, GetOnnxDtype(P2ODataType::INT64), axis_);
-  helper->MakeNode("CumSum", {input_info[0].name, axis_node},
-                   {output_info[0].name});
+      helper_->Constant({1}, GetOnnxDtype(P2ODataType::INT64), axis_);
+  helper_->MakeNode("CumSum", {input_info[0].name, axis_node},
+                    {output_info[0].name});
 }
 
 }  // namespace paddle2onnx

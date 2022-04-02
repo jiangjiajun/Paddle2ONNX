@@ -15,16 +15,18 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 
 class Reshape2Mapper : public Mapper {
  public:
-  Reshape2Mapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {}
+  Reshape2Mapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                 int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {}
 
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 };
 
 }  // namespace paddle2onnx

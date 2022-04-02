@@ -22,8 +22,9 @@ namespace paddle2onnx {
 
 class SliceMapper : public Mapper {
  public:
-  SliceMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  SliceMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+              int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("axes", &axes_);
     GetAttr("starts", &starts_);
     GetAttr("ends", &ends_);
@@ -36,8 +37,8 @@ class SliceMapper : public Mapper {
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
-  void Opset10(OnnxHelper* helper);
+  void Opset7();
+  void Opset10();
 
  private:
   std::vector<int64_t> DecreaseAxis();

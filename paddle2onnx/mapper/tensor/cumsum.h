@@ -22,12 +22,13 @@ namespace paddle2onnx {
 
 class CumsumMapper : public Mapper {
  public:
-  CumsumMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  CumsumMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+               int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("axis", &axis_);
   }
   int32_t GetMinOpset(bool verbose = false);
-  void Opset11(OnnxHelper* helper);
+  void Opset11();
 
  private:
   int64_t axis_;

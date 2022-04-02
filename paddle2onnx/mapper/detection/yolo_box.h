@@ -22,8 +22,9 @@ namespace paddle2onnx {
 
 class YoloBoxMapper : public Mapper {
  public:
-  YoloBoxMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  YoloBoxMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     MarkAsExperimentalOp();
     GetAttr("clip_bbox", &clip_bbox_);
     GetAttr("iou_aware", &iou_aware_);
@@ -36,7 +37,7 @@ class YoloBoxMapper : public Mapper {
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset11(OnnxHelper* helper);
+  void Opset11();
 
  private:
   bool clip_bbox_;

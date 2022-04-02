@@ -26,7 +26,7 @@ int32_t ClipMapper::GetMinOpset(bool verbose) {
   return 7;
 }
 
-void ClipMapper::Opset7(OnnxHelper* helper) {
+void ClipMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
@@ -39,44 +39,44 @@ void ClipMapper::Opset7(OnnxHelper* helper) {
     int32_t dtype = input_info[0].dtype;
     // onnxruntime only supports float input
     if (input_info[0].dtype != P2ODataType::FP32) {
-      input_name = helper->AutoCast(input_info[0].name, input_info[0].dtype,
-                                    P2ODataType::FP32);
+      input_name = helper_->AutoCast(input_info[0].name, input_info[0].dtype,
+                                     P2ODataType::FP32);
       dtype_converted = true;
       dtype = P2ODataType::FP32;
     }
     std::string max_name;
     if (has_max_tensor_input) {
       auto max_info = GetInput("Max");
-      max_name = helper->AutoCast(max_info[0].name, max_info[0].dtype, dtype);
+      max_name = helper_->AutoCast(max_info[0].name, max_info[0].dtype, dtype);
     } else {
       float max_val;
       GetAttr("max", &max_val);
-      max_name = helper->Constant({1}, GetOnnxDtype(dtype), max_val);
+      max_name = helper_->Constant({1}, GetOnnxDtype(dtype), max_val);
     }
     std::string min_name;
     if (has_min_tensor_input) {
       auto min_info = GetInput("Min");
-      min_name = helper->AutoCast(min_info[0].name, min_info[0].dtype, dtype);
+      min_name = helper_->AutoCast(min_info[0].name, min_info[0].dtype, dtype);
     } else {
       float min_val;
       GetAttr("min", &min_val);
-      min_name = helper->Constant({1}, GetOnnxDtype(dtype), min_val);
+      min_name = helper_->Constant({1}, GetOnnxDtype(dtype), min_val);
     }
     if (dtype_converted) {
-      auto node = helper->MakeNode("Clip", {input_name, min_name, max_name});
-      helper->AutoCast(node->output(0), output_info[0].name, P2ODataType::FP32,
-                       output_info[0].dtype);
+      auto node = helper_->MakeNode("Clip", {input_name, min_name, max_name});
+      helper_->AutoCast(node->output(0), output_info[0].name, P2ODataType::FP32,
+                        output_info[0].dtype);
     } else {
-      helper->MakeNode("Clip", {input_name, min_name, max_name},
-                       {output_info[0].name});
+      helper_->MakeNode("Clip", {input_name, min_name, max_name},
+                        {output_info[0].name});
     }
   } else {
     float max_val;
     GetAttr("max", &max_val);
     float min_val;
     GetAttr("min", &min_val);
-    helper->Clip(input_info[0].name, output_info[0].name, min_val, max_val,
-                 input_info[0].dtype);
+    helper_->Clip(input_info[0].name, output_info[0].name, min_val, max_val,
+                  input_info[0].dtype);
   }
 }
 

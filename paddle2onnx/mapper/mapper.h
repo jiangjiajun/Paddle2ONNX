@@ -24,9 +24,51 @@ namespace paddle2onnx {
 class Mapper {
  public:
   Mapper() {}
-  Mapper(const PaddleParser& p, int32_t block_id, int32_t op_id) : parser_(&p) {
+  Mapper(const PaddleParser& p, OnnxHelper* helper, int32_t block_id,
+         int32_t op_id)
+      : parser_(&p) {
     block_idx_ = block_id;
     op_idx_ = op_id;
+    helper_ = helper;
+  }
+
+  P2OLogger Logger(const bool& verbose, const int32_t& opset_version = 100) {
+    bool v = verbose;
+    if (opset_version <= helper_->GetOpsetVersion()) {
+      v = false;
+    }
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
+    std::string output_name = "";
+    if (op.outputs(0).arguments_size() > 0) {
+      output_name = op.outputs(0).arguments(0);
+    }
+    std::string op_type = op.type();
+    std::string prefix = "[Paddle2ONNX][" + op_type + ": " + output_name + "]";
+    return P2OLogger(v, prefix);
+  }
+
+  P2OLogger Error() {
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
+    std::string output_name = "";
+    if (op.outputs(0).arguments_size() > 0) {
+      output_name = op.outputs(0).arguments(0);
+    }
+    std::string op_type = op.type();
+    std::string prefix =
+        "[ERROR][Paddle2ONNX][" + op_type + ": " + output_name + "]";
+    return P2OLogger(true, prefix);
+  }
+
+  P2OLogger Warn() {
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
+    std::string output_name = "";
+    if (op.outputs(0).arguments_size() > 0) {
+      output_name = op.outputs(0).arguments(0);
+    }
+    std::string op_type = op.type();
+    std::string prefix =
+        "[WARN][Paddle2ONNX][" + op_type + ": " + output_name + "]";
+    return P2OLogger(true, prefix);
   }
 
   // Some operators is not implement very well, e.g the output may not be same
@@ -38,48 +80,48 @@ class Mapper {
   // if return value < 0, means the op is not supported.
   virtual int32_t GetMinOpset(bool verbose = false) { return 7; }
 
-  void Run(OnnxHelper* helper, int32_t opset_version = 7) {
-    export_opset_version_ = opset_version;
+  void Run() {
+    int32_t opset_version = helper_->GetOpsetVersion();
     Assert(opset_version >= 7 && opset_version <= 15,
-           "Paddle2ONNX only support opset_version in range of [7, 15].");
+           "[Paddle2ONNX] Only support opset_version in range of [7, 15].");
     if (opset_version == 15) {
-      Opset15(helper);
+      Opset15();
     } else if (opset_version == 14) {
-      Opset14(helper);
+      Opset14();
     } else if (opset_version == 13) {
-      Opset13(helper);
+      Opset13();
     } else if (opset_version == 12) {
-      Opset12(helper);
+      Opset12();
     } else if (opset_version == 11) {
-      Opset11(helper);
+      Opset11();
     } else if (opset_version == 10) {
-      Opset10(helper);
+      Opset10();
     } else if (opset_version == 9) {
-      Opset9(helper);
+      Opset9();
     } else if (opset_version == 8) {
-      Opset8(helper);
+      Opset8();
     } else {
-      Opset7(helper);
+      Opset7();
     }
   }
 
-  virtual void Opset15(OnnxHelper* helper) { Opset14(helper); }
+  virtual void Opset15() { Opset14(); }
 
-  virtual void Opset14(OnnxHelper* helper) { Opset13(helper); }
+  virtual void Opset14() { Opset13(); }
 
-  virtual void Opset13(OnnxHelper* helper) { Opset12(helper); }
+  virtual void Opset13() { Opset12(); }
 
-  virtual void Opset12(OnnxHelper* helper) { Opset11(helper); }
+  virtual void Opset12() { Opset11(); }
 
-  virtual void Opset11(OnnxHelper* helper) { Opset10(helper); }
+  virtual void Opset11() { Opset10(); }
 
-  virtual void Opset10(OnnxHelper* helper) { Opset9(helper); }
+  virtual void Opset10() { Opset9(); }
 
-  virtual void Opset9(OnnxHelper* helper) { Opset8(helper); }
+  virtual void Opset9() { Opset8(); }
 
-  virtual void Opset8(OnnxHelper* helper) { Opset7(helper); }
+  virtual void Opset8() { Opset7(); }
 
-  virtual void Opset7(OnnxHelper* helper) {
+  virtual void Opset7() {
     Assert(false,
            "This error shouldn't happend, please report to "
            "https://github.com/PaddlePaddle/Paddle2ONNX.git.");
@@ -88,12 +130,12 @@ class Mapper {
   virtual ~Mapper() = default;
   bool is_experimental_op_ = false;
   const PaddleParser* parser_;
+  OnnxHelper* helper_;
   int32_t block_idx_;
   int32_t op_idx_;
-  int32_t export_opset_version_;
 
   std::string OpType() const {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     return op.type();
   }
   bool HasInput(const std::string& name) const {
@@ -109,35 +151,35 @@ class Mapper {
     return parser_->GetOpOutput(block_idx_, op_idx_, name);
   }
   bool HasAttr(const std::string& name) const {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     return parser_->OpHasAttr(op, name);
   }
   void GetAttr(const std::string& name, int64_t* val) {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     parser_->GetOpAttr(op, name, val);
   }
   void GetAttr(const std::string& name, float* val) {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     parser_->GetOpAttr(op, name, val);
   }
   void GetAttr(const std::string& name, bool* val) {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     parser_->GetOpAttr(op, name, val);
   }
   void GetAttr(const std::string& name, std::string* val) {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     parser_->GetOpAttr(op, name, val);
   }
   void GetAttr(const std::string& name, std::vector<int64_t>* val) {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     parser_->GetOpAttr(op, name, val);
   }
   void GetAttr(const std::string& name, std::vector<float>* val) {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     parser_->GetOpAttr(op, name, val);
   }
   void GetAttr(const std::string& name, std::vector<double>* val) {
-    auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+    auto& op = parser_->GetOpDesc(block_idx_, op_idx_);
     parser_->GetOpAttr(op, name, val);
   }
 

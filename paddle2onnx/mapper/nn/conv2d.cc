@@ -24,35 +24,29 @@ REGISTER_MAPPER(depthwise_conv2d, Conv2dMapper)
 int32_t Conv2dMapper::GetMinOpset(bool verbose) {
   // NHWC is not supported
   if (data_format_ == "NHWC") {
-    if (verbose) {
-      std::cerr << "[ERROR] Cannot support NHWC format for operator conv2d."
-                << std::endl;
-    }
+    Error() << "Cannot support input with NHWC format." << std::endl;
     return -1;
   }
   // strides should be less or equal than kernel size
   auto kernel_info = GetInput("Filter");
   if (kernel_info[0].shape[2] < strides_[0] ||
       kernel_info[0].shape[3] < strides_[1]) {
-    if (verbose) {
-      std::cerr
-          << "[ERROR] Cannot handle the situation that kernel_size < strides"
-          << std::endl;
-      return -1;
-    }
+    Logger(verbose) << "Cannot handle the situation that kernel_size < strides"
+                    << std::endl;
+    return -1;
   }
   return 7;
 }
 
-void Conv2dMapper::Opset7(OnnxHelper* helper) {
+void Conv2dMapper::Opset7() {
   auto kernel_info = GetInput("Filter");
   auto input_info = GetInput("Input");
   auto output_info = GetOutput("Output");
-  auto input = helper->AutoCast(input_info[0].name, input_info[0].dtype,
-                                P2ODataType::FP32);
-  auto kernel = helper->AutoCast(kernel_info[0].name, kernel_info[0].dtype,
+  auto input = helper_->AutoCast(input_info[0].name, input_info[0].dtype,
                                  P2ODataType::FP32);
-  auto node = helper->MakeNode("Conv", {input, kernel});
+  auto kernel = helper_->AutoCast(kernel_info[0].name, kernel_info[0].dtype,
+                                  P2ODataType::FP32);
+  auto node = helper_->MakeNode("Conv", {input, kernel});
   AddAttribute(node, "dilations", dilations_);
   std::vector<int64_t> kernel_shape = {kernel_info[0].shape[2],
                                        kernel_info[0].shape[3]};
@@ -68,8 +62,8 @@ void Conv2dMapper::Opset7(OnnxHelper* helper) {
   } else {
     AddAttribute(node, "pads", paddings_);
   }
-  helper->AutoCast(node->output(0), output_info[0].name, P2ODataType::FP32,
-                   output_info[0].dtype);
+  helper_->AutoCast(node->output(0), output_info[0].name, P2ODataType::FP32,
+                    output_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

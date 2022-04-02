@@ -15,21 +15,23 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 
 class ReduceMapper : public Mapper {
  public:
-  ReduceMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  ReduceMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+               int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("keep_dim", &keep_dim_);
     GetAttr("reduce_all", &reduce_all_);
     GetAttr("in_dtype", &in_dtype_);
     GetAttr("out_dtype", &out_dtype_);
     GetAttr("dim", &dim_);
   }
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 
  private:
   bool keep_dim_;

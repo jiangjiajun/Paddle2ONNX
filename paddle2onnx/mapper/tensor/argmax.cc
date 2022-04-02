@@ -17,18 +17,18 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(arg_max, ArgMaxMapper)
 
-void ArgMaxMapper::Opset7(OnnxHelper* helper) {
+void ArgMaxMapper::Opset7() {
   auto input_info = parser_->GetOpInput(block_idx_, op_idx_, "X");
   auto output_info = parser_->GetOpOutput(block_idx_, op_idx_, "Out");
   auto input = input_info[0].name;
   if (flatten_) {
-    input = helper->Flatten(input_info[0].name);
+    input = helper_->Flatten(input_info[0].name);
   }
-  auto arg_node = helper->MakeNode("ArgMax", {input});
+  auto arg_node = helper_->MakeNode("ArgMax", {input});
   AddAttribute(arg_node, "axis", axis_);
   AddAttribute(arg_node, "keepdims", static_cast<int64_t>(keepdims_));
-  helper->AutoCast(arg_node->output(0), output_info[0].name, P2ODataType::INT64,
-                   output_info[0].dtype);
+  helper_->AutoCast(arg_node->output(0), output_info[0].name,
+                    P2ODataType::INT64, output_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

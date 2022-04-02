@@ -20,7 +20,7 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(batch_norm, BatchNormMapper)
 
-void BatchNormMapper::Opset7(OnnxHelper* helper) {
+void BatchNormMapper::Opset7() {
   auto input_info = GetInput("X");
   auto scale_info = GetInput("Scale");
   auto bias_info = GetInput("Bias");
@@ -28,12 +28,12 @@ void BatchNormMapper::Opset7(OnnxHelper* helper) {
   auto variance_info = GetInput("Variance");
   auto output_info = GetOutput("Y");
 
-  auto node = helper->MakeNode(
+  auto node = helper_->MakeNode(
       "BatchNormalization",
       {input_info[0].name, scale_info[0].name, bias_info[0].name,
        mean_info[0].name, variance_info[0].name},
       {output_info[0].name});
-  if (helper->GetOpsetVersion() < 9) {
+  if (helper_->GetOpsetVersion() < 9) {
     int64_t spatial = 1;
     AddAttribute(node, "spatial", spatial);
   }

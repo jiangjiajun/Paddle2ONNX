@@ -17,8 +17,7 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(top_k_v2, TopKMapper)
 
-void TopKMapper::Opset7(OnnxHelper* helper) {
-  auto op = parser_->GetOpDesc(block_idx_, op_idx_);
+void TopKMapper::Opset7() {
   auto x_info = GetInput("X");
   auto output_info = GetOutput("Out");
   auto indices_info = GetOutput("Indices");
@@ -26,23 +25,23 @@ void TopKMapper::Opset7(OnnxHelper* helper) {
   std::string k = "";
   if (HasInput("K")) {
     auto k_info = GetInput("K");
-    k = helper->AutoCast(k_info[0].name, k_info[0].dtype, P2ODataType::INT64);
+    k = helper_->AutoCast(k_info[0].name, k_info[0].dtype, P2ODataType::INT64);
     if (k_info[0].Rank() == 0) {
-      k = helper->Reshape(k, std::vector<int64_t>(1, -1));
+      k = helper_->Reshape(k, std::vector<int64_t>(1, -1));
     }
   } else {
     int64_t k_value = 0;
     GetAttr("k", &k_value);
-    k = helper->Constant({1}, ONNX_NAMESPACE::TensorProto::INT64, k_value);
+    k = helper_->Constant({1}, ONNX_NAMESPACE::TensorProto::INT64, k_value);
   }
-  auto out_node = helper->MakeNode("TopK", {x_info[0].name, k}, 2);
+  auto out_node = helper_->MakeNode("TopK", {x_info[0].name, k}, 2);
   AddAttribute(out_node, "largest", static_cast<int64_t>(largest_));
   AddAttribute(out_node, "sorted", static_cast<int64_t>(sorted_));
   AddAttribute(out_node, "axis", axis_);
-  helper->AutoCast(out_node->output(0), output_info[0].name, x_info[0].dtype,
-                   output_info[0].dtype);
-  helper->AutoCast(out_node->output(1), indices_info[0].name,
-                   P2ODataType::INT64, indices_info[0].dtype);
+  helper_->AutoCast(out_node->output(0), output_info[0].name, x_info[0].dtype,
+                    output_info[0].dtype);
+  helper_->AutoCast(out_node->output(1), indices_info[0].name,
+                    P2ODataType::INT64, indices_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

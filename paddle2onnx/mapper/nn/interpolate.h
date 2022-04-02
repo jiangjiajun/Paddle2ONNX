@@ -19,8 +19,9 @@ namespace paddle2onnx {
 
 class InterpolateMapper : public Mapper {
  public:
-  InterpolateMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  InterpolateMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                    int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("data_layout", &data_layout_);
     GetAttr("align_corners", &align_corners_);
     GetAttr("align_mode", &align_mode_);
@@ -37,11 +38,11 @@ class InterpolateMapper : public Mapper {
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset11(OnnxHelper* helper);
+  void Opset11();
 
  private:
-  std::string ComputeOutSize(OnnxHelper* helper);
-  std::string ComputeScale(OnnxHelper* helper);
+  std::string ComputeOutSize();
+  std::string ComputeScale();
   std::map<std::string, std::string> resize_mapper_;
   std::string method_;
   std::string data_layout_;

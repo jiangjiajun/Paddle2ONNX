@@ -17,7 +17,7 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(expand_v2, ExpandMapper)
 
-void ExpandMapper::Opset8(OnnxHelper* helper) {
+void ExpandMapper::Opset8() {
   auto x_info = GetInput("X");
   auto out_info = GetOutput("Out");
 
@@ -26,36 +26,36 @@ void ExpandMapper::Opset8(OnnxHelper* helper) {
   if (HasInput("Shape")) {
     auto shape_info = GetInput("Shape");
     dim_diff = shape_info[0].shape[0] - x_info[0].Rank();
-    shape = helper->AutoCast(shape_info[0].name, shape_info[0].dtype,
-                             P2ODataType::INT64);
+    shape = helper_->AutoCast(shape_info[0].name, shape_info[0].dtype,
+                              P2ODataType::INT64);
   } else if (HasInput("expand_shapes_tensor")) {
     auto shape_info = GetInput("expand_shapes_tensor");
     dim_diff = shape_info.size() - x_info[0].Rank();
-    shape = helper->ConcatIndices(shape_info);
+    shape = helper_->ConcatIndices(shape_info);
   } else {
     std::vector<int64_t> shape_value;
     GetAttr("shape", &shape_value);
     dim_diff = shape_value.size() - x_info[0].Rank();
-    shape = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64, shape_value);
+    shape = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, shape_value);
   }
 
-  auto input_shape = helper->MakeNode("Shape", {x_info[0].name})->output(0);
+  auto input_shape = helper_->MakeNode("Shape", {x_info[0].name})->output(0);
   if (dim_diff > 0) {
-    auto padding_shape = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64,
-                                          std::vector<int64_t>(dim_diff, 1));
-    input_shape = helper->Concat({padding_shape, input_shape}, 0);
+    auto padding_shape = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                                           std::vector<int64_t>(dim_diff, 1));
+    input_shape = helper_->Concat({padding_shape, input_shape}, 0);
   }
-  if (helper->GetOpsetVersion() < 12) {
+  if (helper_->GetOpsetVersion() < 12) {
     // While opset < 12, Max cannot support int64 datatype with onnxruntime
     input_shape =
-        helper->AutoCast(input_shape, P2ODataType::INT64, P2ODataType::FP32);
-    shape = helper->AutoCast(shape, P2ODataType::INT64, P2ODataType::FP32);
-    shape = helper->MakeNode("Max", {input_shape, shape})->output(0);
-    shape = helper->AutoCast(shape, P2ODataType::FP32, P2ODataType::INT64);
+        helper_->AutoCast(input_shape, P2ODataType::INT64, P2ODataType::FP32);
+    shape = helper_->AutoCast(shape, P2ODataType::INT64, P2ODataType::FP32);
+    shape = helper_->MakeNode("Max", {input_shape, shape})->output(0);
+    shape = helper_->AutoCast(shape, P2ODataType::FP32, P2ODataType::INT64);
   } else {
-    shape = helper->MakeNode("Max", {input_shape, shape})->output(0);
+    shape = helper_->MakeNode("Max", {input_shape, shape})->output(0);
   }
-  helper->MakeNode("Expand", {x_info[0].name, shape}, {out_info[0].name});
+  helper_->MakeNode("Expand", {x_info[0].name, shape}, {out_info[0].name});
 }
 
 }  // namespace paddle2onnx

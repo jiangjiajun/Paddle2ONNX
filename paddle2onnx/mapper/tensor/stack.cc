@@ -17,19 +17,19 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(stack, StackMapper)
 
-void StackMapper::Opset7(OnnxHelper* helper) {
+void StackMapper::Opset7() {
   auto x_info = GetInput("X");
   auto y_info = GetOutput("Y");
 
   int32_t out_dtype = 0;
   std::vector<std::string> aligned_inputs =
-      helper->DtypeAlignment(x_info, &out_dtype);
+      helper_->DtypeAlignment(x_info, &out_dtype);
   for (size_t i = 0; i < aligned_inputs.size(); ++i) {
     aligned_inputs[i] =
-        helper->Unsqueeze(aligned_inputs[i], std::vector<int64_t>(1, axis_));
+        helper_->Unsqueeze(aligned_inputs[i], std::vector<int64_t>(1, axis_));
   }
-  auto out = helper->Concat(aligned_inputs, axis_);
-  helper->AutoCast(out, y_info[0].name, out_dtype, y_info[0].dtype);
+  auto out = helper_->Concat(aligned_inputs, axis_);
+  helper_->AutoCast(out, y_info[0].name, out_dtype, y_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

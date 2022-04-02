@@ -22,8 +22,9 @@ namespace paddle2onnx {
 
 class ElementwiseMapper : public Mapper {
  public:
-  ElementwiseMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  ElementwiseMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                    int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("axis", &axis_);
 
     op_mapper_["elementwise_add"] = "Add";
@@ -36,7 +37,7 @@ class ElementwiseMapper : public Mapper {
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 
  private:
   std::map<std::string, std::string> op_mapper_;
@@ -45,12 +46,16 @@ class ElementwiseMapper : public Mapper {
 
 class ElementWiseModMapper : public Mapper {
  public:
-  ElementWiseModMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {}
+  ElementWiseModMapper(const PaddleParser& p, OnnxHelper* helper,
+                       int64_t block_id, int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {}
 
-  int32_t GetMinOpset(bool verbose = false) { return 10; }
+  int32_t GetMinOpset(bool verbose = false) {
+    Logger(verbose, 10) << RequireOpset(10) << std::endl;
+    return 10;
+  }
 
-  void Opset10(OnnxHelper* helper);
+  void Opset10();
 };
 
 }  // namespace paddle2onnx

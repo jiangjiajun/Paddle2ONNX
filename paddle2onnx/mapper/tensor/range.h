@@ -15,17 +15,22 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #include "paddle2onnx/mapper/mapper.h"
 
 namespace paddle2onnx {
 
 class RangeMapper : public Mapper {
  public:
-  RangeMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {}
+  RangeMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+              int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {}
 
-  int32_t GetMinOpset(bool verbose = false) { return 11; }
-  void Opset11(OnnxHelper* helper);
+  int32_t GetMinOpset(bool verbose = false) {
+    Logger(verbose, 11) << RequireOpset(11) << std::endl;
+    return 11;
+  }
+  void Opset11();
 };
 
 }  // namespace paddle2onnx

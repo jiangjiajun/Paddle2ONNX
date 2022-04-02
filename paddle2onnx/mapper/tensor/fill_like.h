@@ -22,8 +22,9 @@ namespace paddle2onnx {
 
 class FillLikeMapper : public Mapper {
  public:
-  FillLikeMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  FillLikeMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                 int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     if (OpType() == "fill_zeros_like") {
       value_ = 0.0;
     } else {
@@ -31,8 +32,11 @@ class FillLikeMapper : public Mapper {
     }
   }
 
-  int32_t GetMinOpset(bool verbose = false) { return 9; }
-  void Opset9(OnnxHelper* helper);
+  int32_t GetMinOpset(bool verbose = false) {
+    Logger(verbose) << RequireOpset(9) << std::endl;
+    return 9;
+  }
+  void Opset9();
 
  private:
   float value_;

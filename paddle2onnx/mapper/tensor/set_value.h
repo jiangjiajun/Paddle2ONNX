@@ -22,8 +22,9 @@ namespace paddle2onnx {
 
 class SetValueMapper : public Mapper {
  public:
-  SetValueMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  SetValueMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                 int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("axes", &axes_);
     GetAttr("starts", &starts_);
     GetAttr("ends", &ends_);
@@ -45,7 +46,7 @@ class SetValueMapper : public Mapper {
     }
   }
   int32_t GetMinOpset(bool verbose = false);
-  void Opset12(OnnxHelper* helper);
+  void Opset12();
 
  private:
   std::vector<int64_t> axes_;

@@ -14,8 +14,10 @@
 
 #pragma once
 #include <onnx/onnx_pb.h>
+
 #include <algorithm>
 #include <set>
+
 #include "paddle2onnx/mapper/mapper.h"
 #include "paddle2onnx/parser/parser.h"
 
@@ -27,6 +29,8 @@ struct ModelExporter {
   std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> inputs;
   std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> outputs;
   OnnxHelper _helper;
+  int32_t _total_ops_num = 0;
+  int32_t _current_exported_num = 0;
 
   void ExportParameters(const std::map<std::string, Weight>& params,
                         bool use_initializer = false);
@@ -49,9 +53,14 @@ struct ModelExporter {
   //    1. is the op convert function implemented
   //    2. is the op convertable(some cases may not be able to convert)
   // If the model is not convertable, return -1
-  int32_t GetMinOpset(const PaddleParser& parser, const int32_t& opset_version,
-                      bool verbose = false);
+  int32_t GetMinOpset(const PaddleParser& parser, bool verbose = false);
 
+  //  // Remove isolated nodes in onnx model
+  //  void RemoveIsolatedNodes(
+  //      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>* parameters,
+  //      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>* inputs,
+  //      std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>>* outputs,
+  //      std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>* nodes);
   // Process dumplicate tensor names in paddle model
   void ProcessGraphDumplicateNames(
       std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>>* parameters,

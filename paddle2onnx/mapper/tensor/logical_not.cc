@@ -17,11 +17,11 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(logical_not, LogicalNotMapper)
 
-void LogicalNotMapper::Opset7(OnnxHelper* helper) {
+void LogicalNotMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
-  helper->MakeNode("Not", {input_info[0].name}, {output_info[0].name});
+  helper_->MakeNode("Not", {input_info[0].name}, {output_info[0].name});
 }
 
 }  // namespace paddle2onnx

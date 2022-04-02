@@ -13,9 +13,11 @@
 // limitations under the License.
 
 #include "paddle2onnx/parser/parser.h"
+
 #include <fstream>
 #include <sstream>
 #include <string>
+
 #include "paddle2onnx/utils/utils.h"
 
 namespace paddle2onnx {
@@ -261,8 +263,8 @@ int PaddleParser::NumOfOps(int block_idx) const {
   return prog->blocks(block_idx).ops_size();
 }
 
-const framework::proto::OpDesc PaddleParser::GetOpDesc(int32_t block_idx,
-                                                       int32_t op_idx) const {
+const framework::proto::OpDesc& PaddleParser::GetOpDesc(int32_t block_idx,
+                                                        int32_t op_idx) const {
   Assert(block_idx < NumOfBlocks(),
          "block_idx is greater than number of blocks.");
   Assert(op_idx < NumOfOps(block_idx),
@@ -474,8 +476,8 @@ void PaddleParser::GetOpAttr(const paddle2onnx::framework::proto::OpDesc& op,
     if (op.attrs(i).name() == name) {
       found = true;
       Assert(op.attrs(i).has_i() || op.attrs(i).has_l(),
-             "Cannot find int32/int64 data from attr: " + name + " in op:" +
-                 op.type());
+             "Cannot find int32/int64 data from attr: " + name +
+                 " in op:" + op.type());
       if (op.attrs(i).has_i()) {
         *res = (int64_t)(op.attrs(i).i());
       } else {
@@ -566,8 +568,8 @@ void PaddleParser::GetOpAttr(const paddle2onnx::framework::proto::OpDesc& op,
   for (auto i = 0; i < op.attrs_size(); ++i) {
     if (op.attrs(i).name() == name) {
       Assert(op.attrs(i).floats_size() >= 0,
-             "Cannot find list of float data from attr: " + name + " in op: " +
-                 op.type());
+             "Cannot find list of float data from attr: " + name +
+                 " in op: " + op.type());
       found = true;
       for (auto j = 0; j < op.attrs(i).floats_size(); ++j) {
         res->push_back(static_cast<float>(op.attrs(i).floats(j)));
@@ -586,8 +588,8 @@ void PaddleParser::GetOpAttr(const paddle2onnx::framework::proto::OpDesc& op,
   for (auto i = 0; i < op.attrs_size(); ++i) {
     if (op.attrs(i).name() == name) {
       Assert(op.attrs(i).float64s_size() >= 0,
-             "Cannot find list of double data from attr: " + name + " in op: " +
-                 op.type());
+             "Cannot find list of double data from attr: " + name +
+                 " in op: " + op.type());
       found = true;
       for (auto j = 0; j < op.attrs(i).float64s_size(); ++j) {
         res->push_back(static_cast<double>(op.attrs(i).float64s(j)));

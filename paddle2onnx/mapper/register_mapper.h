@@ -15,25 +15,29 @@
 #pragma once
 #include <fstream>
 #include <map>
+
 #include "paddle2onnx/utils/utils.h"
 // This code is modified from
 // https://blog.csdn.net/ZJU_fish1996/article/details/86515711
 namespace paddle2onnx {
 class Mapper;
 class PaddleParser;
+class OnnxHelper;
 #define REGISTER_MAPPER(op_name, class_name)                            \
   class op_name##Generator : public Generator {                         \
    public:                                                              \
     op_name##Generator() { MapperHelper::Get()->Push(#op_name, this); } \
-    Mapper* Create(const PaddleParser& p, int64_t b, int64_t o) {       \
-      return new class_name(p, b, o);                                   \
+    Mapper* Create(const PaddleParser& p, OnnxHelper* h, int64_t b,     \
+                   int64_t o) {                                         \
+      return new class_name(p, h, b, o);                                \
     }                                                                   \
   };                                                                    \
   op_name##Generator* op_name##inst = new op_name##Generator();
 
 class Generator {
  public:
-  virtual Mapper* Create(const PaddleParser&, int64_t, int64_t) = 0;
+  virtual Mapper* Create(const PaddleParser&, OnnxHelper* helper, int64_t,
+                         int64_t) = 0;
 };
 
 class MapperHelper {
@@ -88,10 +92,10 @@ class MapperHelper {
   void ClearNameCounter() { name_counter.clear(); }
 
   Mapper* CreateMapper(const std::string& name, const PaddleParser& parser,
-                       int64_t block_id, int64_t op_id) {
+                       OnnxHelper* helper, int64_t block_id, int64_t op_id) {
     Assert(mappers.find(name) != mappers.end(),
            name + " cannot be found in registered mappers.");
-    return mappers[name]->Create(parser, block_id, op_id);
+    return mappers[name]->Create(parser, helper, block_id, op_id);
   }
 
   void Push(const std::string& name, Generator* generator) {

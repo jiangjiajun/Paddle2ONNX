@@ -17,42 +17,42 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(greater_equal, GreaterEqualMapper)
 
-void GreaterEqualMapper::Opset7(OnnxHelper* helper) {
+void GreaterEqualMapper::Opset7() {
   auto x_info = GetInput("X");
   auto y_info = GetInput("Y");
   auto out_info = GetOutput("Out");
 
   int out_dtype = 0;
   std::vector<std::string> aligned_inputs =
-      helper->DtypeAlignment({x_info[0], y_info[0]}, &out_dtype);
+      helper_->DtypeAlignment({x_info[0], y_info[0]}, &out_dtype);
   if (out_dtype != P2ODataType::FP32 && out_dtype != P2ODataType::FP64 &&
-      helper->GetOpsetVersion() < 11) {
+      helper_->GetOpsetVersion() < 11) {
     aligned_inputs[0] =
-        helper->AutoCast(aligned_inputs[0], out_dtype, P2ODataType::FP32);
+        helper_->AutoCast(aligned_inputs[0], out_dtype, P2ODataType::FP32);
     aligned_inputs[1] =
-        helper->AutoCast(aligned_inputs[1], out_dtype, P2ODataType::FP32);
+        helper_->AutoCast(aligned_inputs[1], out_dtype, P2ODataType::FP32);
   }
 
-  auto out = helper->MakeNode("Less", aligned_inputs)->output(0);
-  helper->MakeNode("Not", {out}, {out_info[0].name});
+  auto out = helper_->MakeNode("Less", aligned_inputs)->output(0);
+  helper_->MakeNode("Not", {out}, {out_info[0].name});
 }
 
-void GreaterEqualMapper::Opset12(OnnxHelper* helper) {
+void GreaterEqualMapper::Opset12() {
   auto x_info = GetInput("X");
   auto y_info = GetInput("Y");
   auto out_info = GetOutput("Out");
 
   int out_dtype = 0;
   std::vector<std::string> aligned_inputs =
-      helper->DtypeAlignment({x_info[0], y_info[0]}, &out_dtype);
+      helper_->DtypeAlignment({x_info[0], y_info[0]}, &out_dtype);
   if (out_dtype != P2ODataType::FP32 && out_dtype != P2ODataType::FP64 &&
-      helper->GetOpsetVersion() < 11) {
+      helper_->GetOpsetVersion() < 11) {
     aligned_inputs[0] =
-        helper->AutoCast(aligned_inputs[0], out_dtype, P2ODataType::FP32);
+        helper_->AutoCast(aligned_inputs[0], out_dtype, P2ODataType::FP32);
     aligned_inputs[1] =
-        helper->AutoCast(aligned_inputs[1], out_dtype, P2ODataType::FP32);
+        helper_->AutoCast(aligned_inputs[1], out_dtype, P2ODataType::FP32);
   }
 
-  helper->MakeNode("GreaterOrEqual", aligned_inputs, {out_info[0].name});
+  helper_->MakeNode("GreaterOrEqual", aligned_inputs, {out_info[0].name});
 }
 }  // namespace paddle2onnx

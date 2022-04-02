@@ -18,14 +18,15 @@ namespace paddle2onnx {
 
 class FillConstantMapper : public Mapper {
  public:
-  FillConstantMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  FillConstantMapper(const PaddleParser& p, OnnxHelper* helper,
+                     int64_t block_id, int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("str_value", &str_value_);
     GetAttr("value", &value_);
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset9(OnnxHelper* helper);
+  void Opset9();
 
  private:
   std::string str_value_;

@@ -22,15 +22,16 @@ namespace paddle2onnx {
 
 class SplitMapper : public Mapper {
  public:
-  SplitMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  SplitMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+              int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("axis", &axis_);
     GetAttr("sections", &sections_);
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
-  void Opset13(OnnxHelper* helper);
+  void Opset7();
+  void Opset13();
 
  private:
   int64_t axis_;

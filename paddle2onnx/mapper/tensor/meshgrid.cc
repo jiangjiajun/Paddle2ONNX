@@ -17,29 +17,29 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(meshgrid, MeshgridMapper)
 
-void MeshgridMapper::Opset8(OnnxHelper* helper) {
+void MeshgridMapper::Opset8() {
   auto x_info = GetInput("X");
   auto out_info = GetInput("Out");
 
   std::vector<std::string> x_shapes(x_info.size());
   for (size_t i = 0; i < x_info.size(); ++i) {
-    x_shapes[i] = helper->MakeNode("Shape", {x_info[i].name})->output(0);
+    x_shapes[i] = helper_->MakeNode("Shape", {x_info[i].name})->output(0);
   }
-  auto out_shape = helper->Concat(x_shapes, 0);
+  auto out_shape = helper_->Concat(x_shapes, 0);
   for (size_t i = 0; i < x_info.size(); ++i) {
     std::vector<std::string> intermediate_shape(x_info.size());
     for (size_t j = 0; j < x_info.size(); ++j) {
       if (j == i) {
         intermediate_shape[j] = x_shapes[i];
       } else {
-        intermediate_shape[j] = helper->Constant(
+        intermediate_shape[j] = helper_->Constant(
             ONNX_NAMESPACE::TensorProto::INT64, std::vector<int64_t>(1, 1));
       }
     }
-    auto t_reshaped = helper->Concat(intermediate_shape, 0);
+    auto t_reshaped = helper_->Concat(intermediate_shape, 0);
     t_reshaped =
-        helper->MakeNode("Reshape", {x_info[i].name, t_reshaped})->output(0);
-    helper->MakeNode("Expand", {t_reshaped, out_shape}, {out_info[i].name});
+        helper_->MakeNode("Reshape", {x_info[i].name, t_reshaped})->output(0);
+    helper_->MakeNode("Expand", {t_reshaped, out_shape}, {out_info[i].name});
   }
 }
 

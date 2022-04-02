@@ -22,8 +22,9 @@ namespace paddle2onnx {
 
 class AssignValueMapper : public Mapper {
  public:
-  AssignValueMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  AssignValueMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                    int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("dtype", &dtype_);
     GetAttr("shape", &shape_);
     int32_t dtype = static_cast<int32_t>(dtype_);
@@ -36,7 +37,7 @@ class AssignValueMapper : public Mapper {
     }
   }
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 
  private:
   std::vector<float> fp32_values_;

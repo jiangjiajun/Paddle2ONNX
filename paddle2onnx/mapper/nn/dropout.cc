@@ -22,31 +22,25 @@ REGISTER_MAPPER(dropout, DropoutMapper)
 int32_t DropoutMapper::GetMinOpset(bool verbose) {
   if (dropout_implementation_ != "downgrade_in_infer" &&
       dropout_implementation_ != "upscale_in_train") {
-    if (verbose) {
-      std::cerr << "dropout_implementation: " << dropout_implementation_
-                << " is not support." << std::endl;
-      std::cerr << " In op " << OpType()
-                << " , dropout_implementation only support  downgrade_in_infer "
-                   "and upscale_in_train. "
-                << std::endl;
-    }
+    Error() << "Drop out type: " << dropout_implementation_
+            << " is not supported yet." << std::endl;
     return -1;
   }
   return 7;
 }
 
-void DropoutMapper::Opset7(OnnxHelper* helper) {
+void DropoutMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
   if (dropout_implementation_ == "upscale_in_train") {
-    helper->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
+    helper_->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
   } else {
     std::vector<float> value = {1 - dropout_prob_};
     std::string scale_node =
-        helper->Constant(GetOnnxDtype(input_info[0].dtype), value);
-    helper->MakeNode("Mul", {input_info[0].name, scale_node},
-                     {output_info[0].name});
+        helper_->Constant(GetOnnxDtype(input_info[0].dtype), value);
+    helper_->MakeNode("Mul", {input_info[0].name, scale_node},
+                      {output_info[0].name});
   }
 }
 

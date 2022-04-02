@@ -19,7 +19,7 @@ namespace paddle2onnx {
 
 REGISTER_MAPPER(scale, ScaleMapper)
 
-void ScaleMapper::Opset7(OnnxHelper* helper) {
+void ScaleMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
   bool has_scale_tensor = HasInput("ScaleTensor");
@@ -29,38 +29,38 @@ void ScaleMapper::Opset7(OnnxHelper* helper) {
 
   if (!has_scale_tensor && is_scale_1 && is_bias_0) {
     // TODO(yeliang2258): we could add a pass to eleminate all the identity op
-    helper->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
+    helper_->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
   } else {
     // TODO(yeliang2258): we could add a pass to eleminate the scale is 1 or
     // bias is 0
-    auto input = helper->AutoCast(input_info[0].name, input_info[0].dtype,
-                                  P2ODataType::FP32);
+    auto input = helper_->AutoCast(input_info[0].name, input_info[0].dtype,
+                                   P2ODataType::FP32);
     std::string out = input;
     if (bias_after_scale_) {
       if (!is_scale_1) {
-        auto scale = helper->Constant(ONNX_NAMESPACE::TensorProto::FLOAT,
-                                      std::vector<float>(1, scale_));
-        out = helper->MakeNode("Mul", {out, scale})->output(0);
+        auto scale = helper_->Constant(ONNX_NAMESPACE::TensorProto::FLOAT,
+                                       std::vector<float>(1, scale_));
+        out = helper_->MakeNode("Mul", {out, scale})->output(0);
       }
       if (!is_bias_0) {
-        auto bias = helper->Constant(ONNX_NAMESPACE::TensorProto::FLOAT,
-                                     std::vector<float>(1, bias_));
-        out = helper->MakeNode("Add", {out, bias})->output(0);
+        auto bias = helper_->Constant(ONNX_NAMESPACE::TensorProto::FLOAT,
+                                      std::vector<float>(1, bias_));
+        out = helper_->MakeNode("Add", {out, bias})->output(0);
       }
     } else {
       if (!is_bias_0) {
-        auto bias = helper->Constant(ONNX_NAMESPACE::TensorProto::FLOAT,
-                                     std::vector<float>(1, bias_));
-        out = helper->MakeNode("Add", {out, bias})->output(0);
+        auto bias = helper_->Constant(ONNX_NAMESPACE::TensorProto::FLOAT,
+                                      std::vector<float>(1, bias_));
+        out = helper_->MakeNode("Add", {out, bias})->output(0);
       }
       if (!is_scale_1) {
-        auto scale = helper->Constant(ONNX_NAMESPACE::TensorProto::FLOAT,
-                                      std::vector<float>(1, scale_));
-        out = helper->MakeNode("Mul", {out, scale})->output(0);
+        auto scale = helper_->Constant(ONNX_NAMESPACE::TensorProto::FLOAT,
+                                       std::vector<float>(1, scale_));
+        out = helper_->MakeNode("Mul", {out, scale})->output(0);
       }
     }
-    helper->AutoCast(out, output_info[0].name, P2ODataType::FP32,
-                     output_info[0].dtype);
+    helper_->AutoCast(out, output_info[0].name, P2ODataType::FP32,
+                      output_info[0].dtype);
   }
 }
 }  // namespace paddle2onnx

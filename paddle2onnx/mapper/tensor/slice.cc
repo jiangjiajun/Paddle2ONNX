@@ -25,21 +25,32 @@ REGISTER_MAPPER(strided_slice, SliceMapper)
 int32_t SliceMapper::GetMinOpset(bool verbose) {
   if (HasInput("StartsTensorList") || HasInput("EndsTensorList") ||
       HasInput("StridesTensorList")) {
+    Logger(verbose, 10)
+        << "While has input StartsTensorList/EndsTensorListStridesTensorList, "
+        << RequireOpset(10) << std::endl;
     return 10;
   }
   if (HasInput("StartsTensor")) {
     auto info = GetInput("StartsTensor");
     if (!IsConstantInput("StartsTensor")) {
+      Logger(verbose, 10)
+          << "While has input StartsTensor, and it's not a constant tensor, "
+          << RequireOpset(10) << std::endl;
       return 10;
     }
   }
   if (HasInput("EndsTensor")) {
     auto info = GetInput("EndsTensor");
     if (!IsConstantInput("EndsTensor")) {
+      Logger(verbose, 10)
+          << "While has input EndsTensor, and it's not a constant tensor, "
+          << RequireOpset(10) << std::endl;
       return 10;
     }
   }
   if (HasInput("StridesTensor") || strides_.size() > 0) {
+    Logger(verbose, 10) << "While has strides, " << RequireOpset(10)
+                        << std::endl;
     return 10;
   }
   return 7;
@@ -63,7 +74,7 @@ std::vector<int64_t> SliceMapper::DecreaseAxis() {
   return decrease_axis;
 }
 
-void SliceMapper::Opset7(OnnxHelper *helper) {
+void SliceMapper::Opset7() {
   auto input_info = GetInput("Input");
   auto output_info = GetOutput("Out");
 
@@ -95,66 +106,69 @@ void SliceMapper::Opset7(OnnxHelper *helper) {
 
   std::vector<int64_t> decrease_axis = DecreaseAxis();
   if (decrease_axis.empty()) {
-    helper->Slice(input_info[0].name, output_info[0].name, axes_, starts, ends);
+    helper_->Slice(input_info[0].name, output_info[0].name, axes_, starts,
+                   ends);
   } else {
-    std::string node = helper->Slice(input_info[0].name, axes_, starts, ends);
-    helper->Squeeze(node, output_info[0].name, decrease_axis);
+    std::string node = helper_->Slice(input_info[0].name, axes_, starts, ends);
+    helper_->Squeeze(node, output_info[0].name, decrease_axis);
   }
 }
 
-void SliceMapper::Opset10(OnnxHelper *helper) {
+void SliceMapper::Opset10() {
   auto input_info = GetInput("Input");
   auto output_info = GetOutput("Out");
 
   std::string starts = "";
   if (HasInput("StartsTensorList")) {
     auto info = GetInput("StartsTensorList");
-    starts = helper->ConcatIndices(info);
+    starts = helper_->ConcatIndices(info);
   } else if (HasInput("StartsTensor")) {
     auto info = GetInput("StartsTensor");
-    starts = helper->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
+    starts = helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
   } else {
-    starts = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64, starts_);
+    starts = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, starts_);
   }
 
   std::string ends = "";
   if (HasInput("EndsTensorList")) {
     auto info = GetInput("EndsTensorList");
-    ends = helper->ConcatIndices(info);
+    ends = helper_->ConcatIndices(info);
   } else if (HasInput("EndsTensor")) {
     auto info = GetInput("EndsTensor");
-    ends = helper->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
+    ends = helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
   } else {
-    ends = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64, ends_);
+    ends = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, ends_);
   }
 
   std::string strides = "";
   if (HasInput("StridesTensorList")) {
     auto info = GetInput("StridesTensorList");
-    strides = helper->ConcatIndices(info);
+    strides = helper_->ConcatIndices(info);
   } else if (HasInput("StridesTensor")) {
     auto info = GetInput("StridesTensor");
-    strides = helper->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
+    strides =
+        helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
   } else {
     if (strides_.size() == 0) {
-      strides = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64,
-                                 std::vector<int64_t>(axes_.size(), 1));
+      strides = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                                  std::vector<int64_t>(axes_.size(), 1));
     } else {
-      strides = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64, strides_);
+      strides = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, strides_);
     }
   }
 
-  auto axes = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64, axes_);
+  auto axes = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, axes_);
   std::vector<int64_t> decrease_axis = DecreaseAxis();
   if (decrease_axis.empty()) {
-    helper->MakeNode("Slice", {input_info[0].name, starts, ends, axes, strides},
-                     {output_info[0].name});
+    helper_->MakeNode("Slice",
+                      {input_info[0].name, starts, ends, axes, strides},
+                      {output_info[0].name});
   } else {
-    auto out = helper
+    auto out = helper_
                    ->MakeNode("Slice",
                               {input_info[0].name, starts, ends, axes, strides})
                    ->output(0);
-    helper->Squeeze(out, output_info[0].name, decrease_axis);
+    helper_->Squeeze(out, output_info[0].name, decrease_axis);
   }
 }
 

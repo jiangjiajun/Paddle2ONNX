@@ -25,28 +25,24 @@ int32_t AssignValueMapper::GetMinOpset(bool verbose) {
   int32_t dtype = static_cast<int32_t>(dtype_);
   if (dtype != P2ODataType::INT32 && dtype != P2ODataType::INT64 &&
       dtype != P2ODataType::FP32) {
-    if (verbose) {
-      std::cerr
-          << "Paddle only supports int32/int64/float32 in op assign_value."
-          << std::endl;
-    }
+    Error() << "Only supports int32/int64/float32." << std::endl;
     return -1;
   }
   return 7;
 }
 
-void AssignValueMapper::Opset7(OnnxHelper* helper) {
+void AssignValueMapper::Opset7() {
   auto output_info = GetOutput("Out");
   int32_t dtype = static_cast<int32_t>(dtype_);
   if (dtype == P2ODataType::INT32) {
-    helper->Assign(output_info[0].name, GetOnnxDtype(output_info[0].dtype),
-                   shape_, int64_values_);
+    helper_->Assign(output_info[0].name, GetOnnxDtype(output_info[0].dtype),
+                    shape_, int64_values_);
   } else if (dtype == P2ODataType::FP32) {
-    helper->Assign(output_info[0].name, GetOnnxDtype(output_info[0].dtype),
-                   shape_, fp32_values_);
+    helper_->Assign(output_info[0].name, GetOnnxDtype(output_info[0].dtype),
+                    shape_, fp32_values_);
   } else if (dtype == P2ODataType::INT64) {
-    helper->Assign(output_info[0].name, GetOnnxDtype(output_info[0].dtype),
-                   shape_, int64_values_);
+    helper_->Assign(output_info[0].name, GetOnnxDtype(output_info[0].dtype),
+                    shape_, int64_values_);
   }
 }
 

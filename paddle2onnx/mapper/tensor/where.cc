@@ -17,14 +17,15 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(where, WhereMapper)
 
-void WhereMapper::Opset9(OnnxHelper* helper) {
+void WhereMapper::Opset9() {
   auto x_info = GetInput("X");
   auto y_info = GetInput("Y");
   auto cond_info = GetInput("Condition");
   auto out_info = GetOutput("Out");
 
-  helper->MakeNode("Where", {cond_info[0].name, x_info[0].name, y_info[0].name},
-                   {out_info[0].name});
+  helper_->MakeNode("Where",
+                    {cond_info[0].name, x_info[0].name, y_info[0].name},
+                    {out_info[0].name});
 }
 
 }  // namespace paddle2onnx

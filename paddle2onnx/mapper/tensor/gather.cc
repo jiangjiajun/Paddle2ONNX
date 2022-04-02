@@ -20,27 +20,21 @@ REGISTER_MAPPER(gather, GatherMapper)
 int32_t GatherMapper::GetMinOpset(bool verbose) {
   if (HasInput("Axis")) {
     if (!IsConstantInput("Axis")) {
-      if (verbose) {
-        std::cerr << "[ERROR] Paddle2ONNX does not support axis as input "
-                     "tensor for operator: gather."
-                  << std::endl;
-      }
+      Error() << "Parameter axis as input tensor is not supported."
+              << std::endl;
       return -1;
     }
   }
   auto index_info = GetInput("Index");
   if (index_info[0].shape.size() > 1) {
-    if (verbose) {
-      std::cerr << "Paddle2ONNX: While rank of index > 1, opset must >= 11 for "
-                   "operator: gather."
-                << std::endl;
-    }
+    Logger(verbose, 11) << "While rank of index > 1, " << RequireOpset(11)
+                        << std::endl;
     return 11;
   }
   return 7;
 }
 
-void GatherMapper::Opset7(OnnxHelper* helper) {
+void GatherMapper::Opset7() {
   auto x_info = GetInput("X");
   auto index_info = GetInput("Index");
   auto out_info = GetInput("Out");
@@ -57,12 +51,12 @@ void GatherMapper::Opset7(OnnxHelper* helper) {
   Assert(index_info[0].shape.size() == 1,
          "Paddle2ONNX: While rank of index > 1, opset must >= 11 for operator: "
          "gather.");
-  auto node = helper->MakeNode("Gather", {x_info[0].name, index_info[0].name},
-                               {out_info[0].name});
+  auto node = helper_->MakeNode("Gather", {x_info[0].name, index_info[0].name},
+                                {out_info[0].name});
   AddAttribute(node, "axis", axis);
 }
 
-void GatherMapper::Opset11(OnnxHelper* helper) {
+void GatherMapper::Opset11() {
   auto x_info = GetInput("X");
   auto index_info = GetInput("Index");
   auto out_info = GetInput("Out");
@@ -77,14 +71,14 @@ void GatherMapper::Opset11(OnnxHelper* helper) {
     axis = axes[0];
   }
   if (index_info[0].shape.size() == 1) {
-    auto node = helper->MakeNode("Gather", {x_info[0].name, index_info[0].name},
-                                 {out_info[0].name});
+    auto node = helper_->MakeNode(
+        "Gather", {x_info[0].name, index_info[0].name}, {out_info[0].name});
     AddAttribute(node, "axis", axis);
   } else {
-    auto index = helper->AutoCast(index_info[0].name, index_info[0].dtype,
-                                  P2ODataType::INT64);
-    helper->MakeNode("GatherND", {x_info[0].name, index_info[0].name},
-                     {out_info[0].name});
+    auto index = helper_->AutoCast(index_info[0].name, index_info[0].dtype,
+                                   P2ODataType::INT64);
+    helper_->MakeNode("GatherND", {x_info[0].name, index_info[0].name},
+                      {out_info[0].name});
   }
 }
 

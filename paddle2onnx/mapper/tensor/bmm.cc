@@ -17,13 +17,13 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(bmm, BmmMapper)
 
-void BmmMapper::Opset7(OnnxHelper* helper) {
+void BmmMapper::Opset7() {
   auto x_info = GetInput("X");
   auto y_info = GetInput("Y");
   auto out_info = GetOutput("Out");
 
-  auto y = helper->AutoCast(y_info[0].name, y_info[0].dtype, x_info[0].dtype);
-  helper->MakeNode("MatMul", {x_info[0].name, y}, {out_info[0].name});
+  auto y = helper_->AutoCast(y_info[0].name, y_info[0].dtype, x_info[0].dtype);
+  helper_->MakeNode("MatMul", {x_info[0].name, y}, {out_info[0].name});
 }
 
 }  // namespace paddle2onnx

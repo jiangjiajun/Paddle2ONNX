@@ -18,30 +18,30 @@ namespace paddle2onnx {
 REGISTER_MAPPER(assign, AssignMapper)
 REGISTER_MAPPER(share_data, AssignMapper)
 
-void AssignMapper::Opset7(OnnxHelper* helper) {
+void AssignMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
   if (block_idx_ != 0 && OpType() != "share_data") {
     // Here's a trick for tensorrt
     // Consider remove this trick
     if (input_info[0].dtype == P2ODataType::BOOL) {
-      auto zero = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64,
-                                   std::vector<int64_t>(1, 0));
-      auto cast_input = helper->AutoCast(input_info[0].name, P2ODataType::BOOL,
-                                         P2ODataType::INT64);
-      auto result = helper->MakeNode("Add", {cast_input, zero})->output(0);
-      helper->AutoCast(result, output_info[0].name, P2ODataType::INT64,
-                       output_info[0].dtype);
+      auto zero = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                                    std::vector<int64_t>(1, 0));
+      auto cast_input = helper_->AutoCast(input_info[0].name, P2ODataType::BOOL,
+                                          P2ODataType::INT64);
+      auto result = helper_->MakeNode("Add", {cast_input, zero})->output(0);
+      helper_->AutoCast(result, output_info[0].name, P2ODataType::INT64,
+                        output_info[0].dtype);
     } else {
-      auto zero = helper->Constant(GetOnnxDtype(input_info[0].dtype),
-                                   std::vector<double>(1, 0.0));
+      auto zero = helper_->Constant(GetOnnxDtype(input_info[0].dtype),
+                                    std::vector<double>(1, 0.0));
       auto new_input =
-          helper->Unsqueeze(input_info[0].name, std::vector<int64_t>(1, 0));
-      auto result = helper->MakeNode("Add", {new_input, zero})->output(0);
-      helper->Squeeze(result, output_info[0].name, std::vector<int64_t>(1, 0));
+          helper_->Unsqueeze(input_info[0].name, std::vector<int64_t>(1, 0));
+      auto result = helper_->MakeNode("Add", {new_input, zero})->output(0);
+      helper_->Squeeze(result, output_info[0].name, std::vector<int64_t>(1, 0));
     }
   } else {
-    helper->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
+    helper_->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
   }
 }
 

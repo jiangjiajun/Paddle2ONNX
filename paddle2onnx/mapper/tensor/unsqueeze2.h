@@ -22,13 +22,14 @@ namespace paddle2onnx {
 
 class Unsqueeze2Mapper : public Mapper {
  public:
-  Unsqueeze2Mapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  Unsqueeze2Mapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                   int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("axes", &axes_);
   }
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
-  void Opset13(OnnxHelper* helper);
+  void Opset7();
+  void Opset13();
 
  private:
   std::vector<int64_t> axes_;

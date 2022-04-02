@@ -22,8 +22,9 @@ namespace paddle2onnx {
 
 class Pool2dMapper : public Mapper {
  public:
-  Pool2dMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  Pool2dMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+               int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     op_mapper_["max"] = {"MaxPool", "GlobalMaxPool"};
     op_mapper_["avg"] = {"AveragePool", "GlobalAveragePool"};
     GetAttr("pooling_type", &pooling_type_);
@@ -39,16 +40,14 @@ class Pool2dMapper : public Mapper {
     exclusive_ = !exclusive_;
   }
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 
  private:
   bool IsSameSpan(const int64_t& in_size, const int64_t& out_size);
   void AdaptivePool(const std::vector<TensorInfo>& input_info,
-                    const std::vector<TensorInfo>& output_info,
-                    OnnxHelper* helper);
+                    const std::vector<TensorInfo>& output_info);
   void NoAdaptivePool(const std::vector<TensorInfo>& input_info,
-                      const std::vector<TensorInfo>& output_info,
-                      OnnxHelper* helper);
+                      const std::vector<TensorInfo>& output_info);
   bool ceil_mod_;
   bool global_pooling_;
   bool adaptive_;

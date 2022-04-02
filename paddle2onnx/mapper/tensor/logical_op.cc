@@ -19,7 +19,7 @@ REGISTER_MAPPER(logical_and, LogicalOpMapper)
 REGISTER_MAPPER(logical_or, LogicalOpMapper)
 REGISTER_MAPPER(logical_xor, LogicalOpMapper)
 
-void LogicalOpMapper::Opset7(OnnxHelper* helper) {
+void LogicalOpMapper::Opset7() {
   auto x_info = GetInput("X");
   auto y_info = GetInput("Y");
   auto out_info = GetOutput("Out");
@@ -29,8 +29,8 @@ void LogicalOpMapper::Opset7(OnnxHelper* helper) {
   op_mapper["logical_or"] = "Or";
   op_mapper["logical_xor"] = "Xor";
 
-  helper->MakeNode(op_mapper[OpType()], {x_info[0].name, y_info[0].name},
-                   {out_info[0].name});
+  helper_->MakeNode(op_mapper[OpType()], {x_info[0].name, y_info[0].name},
+                    {out_info[0].name});
 }
 
 }  // namespace paddle2onnx

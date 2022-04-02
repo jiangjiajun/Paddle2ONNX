@@ -23,22 +23,22 @@ REGISTER_MAPPER(concat, ConcatMapper)
 int32_t ConcatMapper::GetMinOpset(bool verbose) {
   if (HasInput("AxisTensor")) {
     if (!IsConstantInput("AxisTensor")) {
-      std::cerr << "[Paddle2ONNX] While AxisTensor as input exists, it's not "
-                   "supported unless it's a constant tensor for op concat."
-                << std::endl;
+      Error() << "While AxisTensor as input exists, it's not supported unless "
+                 "it's a constant tensor."
+              << std::endl;
       return -1;
     }
   }
   return 7;
 }
 
-void ConcatMapper::Opset7(OnnxHelper* helper) {
+void ConcatMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
   int32_t casted_dtype;
   std::vector<std::string> casted_names =
-      helper->DtypeAlignment(input_info, &casted_dtype);
+      helper_->DtypeAlignment(input_info, &casted_dtype);
   bool has_axis_tensor_input = HasInput("AxisTensor");
 
   int64_t axis = axis_;
@@ -53,10 +53,10 @@ void ConcatMapper::Opset7(OnnxHelper* helper) {
   if (axis < 0) {
     axis = axis + input_info[0].Rank();
   }
-  auto node = helper->MakeNode("Concat", casted_names);
+  auto node = helper_->MakeNode("Concat", casted_names);
   AddAttribute(node, "axis", axis);
-  helper->AutoCast(node->output(0), output_info[0].name, casted_dtype,
-                   output_info[0].dtype);
+  helper_->AutoCast(node->output(0), output_info[0].name, casted_dtype,
+                    output_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

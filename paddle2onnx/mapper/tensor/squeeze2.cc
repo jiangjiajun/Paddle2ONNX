@@ -20,7 +20,7 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(squeeze2, Squeeze2Mapper)
 
-void Squeeze2Mapper::Opset7(OnnxHelper* helper) {
+void Squeeze2Mapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
@@ -30,7 +30,7 @@ void Squeeze2Mapper::Opset7(OnnxHelper* helper) {
     if (i > 1) ret.push_back(i);
   }
   if (ret.size() == input_info[0].Rank()) {
-    helper->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
+    helper_->MakeNode("Identity", {input_info[0].name}, {output_info[0].name});
   } else {
     std::vector<int64_t> axes(axes_.begin(), axes_.end());
     for (size_t i = 0; i < axes.size(); ++i) {
@@ -40,9 +40,9 @@ void Squeeze2Mapper::Opset7(OnnxHelper* helper) {
     }
     if (axes.size() > 0) {
       std::sort(axes.begin(), axes.end());
-      helper->Squeeze(input_info[0].name, output_info[0].name, axes);
+      helper_->Squeeze(input_info[0].name, output_info[0].name, axes);
     } else {
-      helper->Squeeze(input_info[0].name, output_info[0].name, {});
+      helper_->Squeeze(input_info[0].name, output_info[0].name, {});
     }
   }
 }

@@ -19,29 +19,26 @@ REGISTER_MAPPER(equal, EqualMapper)
 
 int32_t EqualMapper::GetMinOpset(bool verbose) {
   if (axis_ != -1) {
-    if (verbose) {
-      std::cerr << "[ERROR] axis attribute must be -1 in operator equal."
-                << std::endl;
-    }
+    Error() << "axis attribute must be -1 in operator equal." << std::endl;
     return -1;
   }
   return 7;
 }
 
-void EqualMapper::Opset7(OnnxHelper* helper) {
+void EqualMapper::Opset7() {
   auto input_x_info = GetInput("X");
   auto input_y_info = GetInput("Y");
   auto output_info = GetOutput("Out");
 
   std::string input_x = input_x_info[0].name;
   std::string input_y = input_y_info[0].name;
-  if (helper->GetOpsetVersion() < 11) {
-    input_x = helper->AutoCast(input_x_info[0].name, input_x_info[0].dtype,
-                               P2ODataType::INT32);
-    input_y = helper->AutoCast(input_y_info[0].name, input_y_info[0].dtype,
-                               P2ODataType::INT32);
+  if (helper_->GetOpsetVersion() < 11) {
+    input_x = helper_->AutoCast(input_x_info[0].name, input_x_info[0].dtype,
+                                P2ODataType::INT32);
+    input_y = helper_->AutoCast(input_y_info[0].name, input_y_info[0].dtype,
+                                P2ODataType::INT32);
   }
-  helper->MakeNode("Equal", {input_x, input_y}, {output_info[0].name});
+  helper_->MakeNode("Equal", {input_x, input_y}, {output_info[0].name});
 }
 
 }  // namespace paddle2onnx

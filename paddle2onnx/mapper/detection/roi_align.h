@@ -19,8 +19,9 @@ namespace paddle2onnx {
 
 class RoiAlignMapper : public Mapper {
  public:
-  RoiAlignMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  RoiAlignMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                 int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     MarkAsExperimentalOp();
     GetAttr("pooled_height", &pooled_height_);
     GetAttr("pooled_width", &pooled_width_);
@@ -29,8 +30,11 @@ class RoiAlignMapper : public Mapper {
     GetAttr("aligned", &aligned_);
   }
 
-  int32_t GetMinOpset(bool verbose = false) { return 10; }
-  void Opset10(OnnxHelper* helper);
+  int32_t GetMinOpset(bool verbose = false) {
+    Logger(verbose, 10) << RequireOpset(10) << std::endl;
+    return 10;
+  }
+  void Opset10();
 
  private:
   int64_t pooled_height_;

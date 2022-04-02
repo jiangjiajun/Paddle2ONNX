@@ -15,9 +15,11 @@
 #pragma once
 
 #include <onnx/onnx_pb.h>
+
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "paddle2onnx/mapper/register_mapper.h"
 #include "paddle2onnx/parser/parser.h"
 
@@ -47,7 +49,7 @@ class OnnxHelper {
  public:
   std::vector<std::shared_ptr<ONNX_NAMESPACE::NodeProto>> nodes;
   std::vector<std::shared_ptr<ONNX_NAMESPACE::ValueInfoProto>> value_infos;
-  int32_t opset_version = 9;
+  int32_t opset_version = 7;
 
   void Clear() { nodes.clear(); }
 

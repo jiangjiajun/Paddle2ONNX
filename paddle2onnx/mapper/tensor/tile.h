@@ -19,9 +19,10 @@ namespace paddle2onnx {
 
 class TileMapper : public Mapper {
  public:
-  TileMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {}
-  void Opset7(OnnxHelper* helper);
+  TileMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+             int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {}
+  void Opset7();
 };
 
 }  // namespace paddle2onnx

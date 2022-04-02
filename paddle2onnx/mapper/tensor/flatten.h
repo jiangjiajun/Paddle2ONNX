@@ -21,13 +21,14 @@ namespace paddle2onnx {
 
 class FlattenMapper : public Mapper {
  public:
-  FlattenMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  FlattenMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("start_axis", &start_axis_);
     GetAttr("stop_axis", &stop_axis_);
   }
 
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 
  private:
   int64_t start_axis_;

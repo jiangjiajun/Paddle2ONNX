@@ -22,14 +22,15 @@ namespace paddle2onnx {
 
 class LookupTableMapper : public Mapper {
  public:
-  LookupTableMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  LookupTableMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                    int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("padding_idx", &padding_idx_);
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
-  void Opset11(OnnxHelper* helper);
+  void Opset7();
+  void Opset11();
 
  private:
   int64_t padding_idx_;

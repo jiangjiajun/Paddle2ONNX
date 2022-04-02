@@ -22,8 +22,9 @@ namespace paddle2onnx {
 
 class Conv2dMapper : public Mapper {
  public:
-  Conv2dMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  Conv2dMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+               int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("groups", &groups_);
     GetAttr("dilations", &dilations_);
     GetAttr("strides", &strides_);
@@ -41,7 +42,7 @@ class Conv2dMapper : public Mapper {
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 
  private:
   std::vector<int64_t> dilations_;

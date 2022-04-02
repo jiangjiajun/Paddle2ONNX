@@ -17,6 +17,7 @@
 #include <cassert>
 #include <numeric>
 #include <type_traits>
+
 #include "paddle2onnx/proto/p2o_paddle.pb.h"
 #include "paddle2onnx/utils/utils.h"
 
@@ -90,8 +91,8 @@ class PaddleParser {
   int NumOfBlocks() const;
   int NumOfOps(int block_idx) const;
   bool HasNms() const { return _has_nms; }
-  const framework::proto::OpDesc GetOpDesc(int32_t block_idx,
-                                           int32_t op_idx) const;
+  const framework::proto::OpDesc& GetOpDesc(int32_t block_idx,
+                                            int32_t op_idx) const;
 
   bool OpHasInput(int64_t block_id, int64_t op_id,
                   const std::string& name) const;

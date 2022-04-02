@@ -19,10 +19,11 @@ namespace paddle2onnx {
 
 class ExpandMapper : public Mapper {
  public:
-  ExpandMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {}
+  ExpandMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+               int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {}
   int32_t GetMinOpset(bool verbose = false) { return 8; }
-  void Opset8(OnnxHelper* helper);
+  void Opset8();
 };
 
 }  // namespace paddle2onnx

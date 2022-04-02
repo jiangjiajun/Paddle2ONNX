@@ -20,14 +20,15 @@ namespace paddle2onnx {
 
 class DropoutMapper : public Mapper {
  public:
-  DropoutMapper(const PaddleParser& p, int64_t block_id, int64_t op_id)
-      : Mapper(p, block_id, op_id) {
+  DropoutMapper(const PaddleParser& p, OnnxHelper* helper, int64_t block_id,
+                int64_t op_id)
+      : Mapper(p, helper, block_id, op_id) {
     GetAttr("dropout_prob", &dropout_prob_);
     GetAttr("dropout_implementation", &dropout_implementation_);
   }
 
   int32_t GetMinOpset(bool verbose = false);
-  void Opset7(OnnxHelper* helper);
+  void Opset7();
 
  private:
   float dropout_prob_ = 0.0;

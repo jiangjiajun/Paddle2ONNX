@@ -17,18 +17,18 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(arg_min, ArgMinMapper)
 
-void ArgMinMapper::Opset7(OnnxHelper* helper) {
+void ArgMinMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
   auto input = input_info[0].name;
   if (flatten_) {
-    input = helper->Flatten(input_info[0].name);
+    input = helper_->Flatten(input_info[0].name);
   }
-  auto arg_node = helper->MakeNode("ArgMin", {input});
+  auto arg_node = helper_->MakeNode("ArgMin", {input});
   AddAttribute(arg_node, "axis", axis_);
   AddAttribute(arg_node, "keepdims", static_cast<int64_t>(keepdims_));
-  helper->AutoCast(arg_node->output(0), output_info[0].name, P2ODataType::INT64,
-                   output_info[0].dtype);
+  helper_->AutoCast(arg_node->output(0), output_info[0].name,
+                    P2ODataType::INT64, output_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

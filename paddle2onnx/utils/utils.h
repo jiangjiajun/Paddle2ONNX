@@ -14,6 +14,7 @@
 
 #pragma once
 #include <stdlib.h>
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -27,6 +28,11 @@ inline void Assert(bool condition, const std::string& message) {
   }
 }
 
+inline const std::string RequireOpset(const int32_t& opset_version) {
+  return "Requires the minimal opset version of " +
+         std::to_string(opset_version) + ".";
+}
+
 class P2OLogger {
  public:
   P2OLogger() {
@@ -34,7 +40,7 @@ class P2OLogger {
     prefix_ = "";
     verbose_ = true;
   }
-  explicit P2OLogger(bool verbose, const std::string& prefix) {
+  explicit P2OLogger(bool verbose, const std::string& prefix = "") {
     verbose_ = verbose;
     line_ = "";
     prefix_ = prefix;

@@ -20,35 +20,25 @@ REGISTER_MAPPER(unsqueeze2, Unsqueeze2Mapper)
 int32_t Unsqueeze2Mapper::GetMinOpset(bool verbose) {
   if (axes_.size() == 0) {
     if (HasInput("AxesTensorList")) {
-      if (verbose) {
-        std::cerr << "[Paddle2ONNX] AxesTensorList as input is not support for "
-                     "op unsqueeze2 with opset < 13."
-                  << std::endl;
-      }
+      Logger(verbose, 13) << "While AxisTensorList as input, "
+                          << RequireOpset(13) << std::endl;
       return 13;
     } else if (HasInput("AxesTensor")) {
       auto info = GetInput("AxesTensor");
       if (!IsConstantInput("AxesTensor")) {
-        if (verbose) {
-          std::cerr << "[Paddle2ONNX] AxesTensor as a nonconstant tensor input "
-                       "is not support for op unsqueeze2 with opset < 13."
-                    << std::endl;
-        }
+        Logger(verbose, 13)
+            << "While AxesTensor as input, and it's not a constant tensor, "
+            << RequireOpset(13) << std::endl;
         return 13;
       } else {
         return 7;
       }
     }
-    if (verbose) {
-      std::cerr << "[Paddle2ONNX] Cannot found axes for op unsqueeze2."
-                << std::endl;
-    }
-    return -1;
   }
   return 7;
 }
 
-void Unsqueeze2Mapper::Opset7(OnnxHelper* helper) {
+void Unsqueeze2Mapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
@@ -65,10 +55,10 @@ void Unsqueeze2Mapper::Opset7(OnnxHelper* helper) {
       axes[i] = axes[i] + input_info[0].Rank() + i + 1;
     }
   }
-  helper->Unsqueeze(input_info[0].name, output_info[0].name, axes);
+  helper_->Unsqueeze(input_info[0].name, output_info[0].name, axes);
 }
 
-void Unsqueeze2Mapper::Opset13(OnnxHelper* helper) {
+void Unsqueeze2Mapper::Opset13() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
@@ -85,19 +75,19 @@ void Unsqueeze2Mapper::Opset13(OnnxHelper* helper) {
   }
 
   if (axes.size() > 0) {
-    helper->Unsqueeze(input_info[0].name, output_info[0].name, axes);
+    helper_->Unsqueeze(input_info[0].name, output_info[0].name, axes);
   } else {
     std::string axes_node = "";
     if (HasInput("AxesTensorList")) {
       auto info = GetInput("AxesTensorList");
-      axes_node = helper->ConcatIndices(info);
+      axes_node = helper_->ConcatIndices(info);
     } else {
       auto info = GetInput("AxesTensor");
       axes_node =
-          helper->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
+          helper_->AutoCast(info[0].name, info[0].dtype, P2ODataType::INT64);
     }
-    helper->MakeNode("Unsqueeze", {input_info[0].name, axes_node},
-                     {output_info[0].name});
+    helper_->MakeNode("Unsqueeze", {input_info[0].name, axes_node},
+                      {output_info[0].name});
   }
 }
 

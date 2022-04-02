@@ -17,7 +17,7 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(tile, TileMapper)
 
-void TileMapper::Opset7(OnnxHelper* helper) {
+void TileMapper::Opset7() {
   auto x_info = GetInput("X");
   auto out_info = GetOutput("Out");
 
@@ -26,17 +26,17 @@ void TileMapper::Opset7(OnnxHelper* helper) {
   std::string repeats = "";
   if (has_repeats_tensor) {
     auto repeats_info = GetInput("RepeatTimes");
-    repeats = helper->AutoCast(repeats_info[0].name, repeats_info[0].dtype,
-                               P2ODataType::INT64);
+    repeats = helper_->AutoCast(repeats_info[0].name, repeats_info[0].dtype,
+                                P2ODataType::INT64);
   } else if (has_repeats_tensor_list) {
     auto repeats_info = GetInput("repeat_times_tensor");
-    repeats = helper->ConcatIndices(repeats_info);
+    repeats = helper_->ConcatIndices(repeats_info);
   } else {
     std::vector<int64_t> values;
     GetAttr("repeat_times", &values);
-    repeats = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64, values);
+    repeats = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, values);
   }
-  helper->MakeNode("Tile", {x_info[0].name, repeats}, {out_info[0].name});
+  helper_->MakeNode("Tile", {x_info[0].name, repeats}, {out_info[0].name});
 }
 
 }  // namespace paddle2onnx

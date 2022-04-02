@@ -22,18 +22,17 @@ int32_t SplitMapper::GetMinOpset(bool verbose) {
   if (HasInput("AxisTensor")) {
     std::vector<int64_t> value;
     if (!TryGetInputValue("AxisTensor", &value)) {
-      if (verbose) {
-        std::cerr << "[Paddle2ONNX] While AxisTensor as the input and it's not "
-                     "a constant tensor, the operator split cannot be "
-                     "converted."
-                  << std::endl;
-      }
+      Error() << "While AxisTensor as the input and it's not a constant "
+                 "tensor, the conversion is not supported yet."
+              << std::endl;
       return -1;
     }
     axis = value[0];
   }
 
   if (HasInput("SectionsTensorList")) {
+    Logger(verbose, 13) << "While has input SectionsTensorList, "
+                        << RequireOpset(13) << std::endl;
     return 13;
   }
 
@@ -41,11 +40,9 @@ int32_t SplitMapper::GetMinOpset(bool verbose) {
     if (sections_[i] < 0) {
       auto info = GetInput("X");
       if (info[0].shape[axis] < 0) {
-        if (verbose) {
-          std::cerr << "Cannot convert split op, while there's -1 in sections "
-                       "and cannot be infered by input shape."
-                    << std::endl;
-        }
+        Error() << "Cannot convert split op, while there's -1 in sections and "
+                   "cannot be infered by input shape."
+                << std::endl;
         return -1;
       }
     }
@@ -53,7 +50,7 @@ int32_t SplitMapper::GetMinOpset(bool verbose) {
   return 7;
 }
 
-void SplitMapper::Opset7(OnnxHelper* helper) {
+void SplitMapper::Opset7() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
@@ -91,10 +88,10 @@ void SplitMapper::Opset7(OnnxHelper* helper) {
     output_names[i] = output_info[i].name;
   }
 
-  helper->Split(input_info[0].name, output_names, sections_, axis);
+  helper_->Split(input_info[0].name, output_names, sections_, axis);
 }
 
-void SplitMapper::Opset13(OnnxHelper* helper) {
+void SplitMapper::Opset13() {
   auto input_info = GetInput("X");
   auto output_info = GetOutput("Out");
 
@@ -112,7 +109,7 @@ void SplitMapper::Opset13(OnnxHelper* helper) {
   std::string splits = "";
   if (HasInput("SectionsTensorList")) {
     auto info = GetInput("SectionsTensorList");
-    splits = helper->ConcatIndices(info);
+    splits = helper_->ConcatIndices(info);
   } else if (sections_.size() > 0) {
     int sum_of_kown_dim = 0;
     for (size_t i = 0; i < sections_.size(); ++i) {
@@ -128,7 +125,7 @@ void SplitMapper::Opset13(OnnxHelper* helper) {
         sections_[i] = input_info[0].shape[axis] - sum_of_kown_dim;
       }
     }
-    splits = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64, sections_);
+    splits = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, sections_);
   }
 
   std::vector<std::string> output_names(output_info.size());
@@ -137,10 +134,10 @@ void SplitMapper::Opset13(OnnxHelper* helper) {
   }
   if (splits != "") {
     auto node =
-        helper->MakeNode("Split", {input_info[0].name, splits}, output_names);
+        helper_->MakeNode("Split", {input_info[0].name, splits}, output_names);
     AddAttribute(node, "axis", axis);
   } else {
-    auto node = helper->MakeNode("Split", {input_info[0].name}, output_names);
+    auto node = helper_->MakeNode("Split", {input_info[0].name}, output_names);
     AddAttribute(node, "axis", axis);
   }
 }

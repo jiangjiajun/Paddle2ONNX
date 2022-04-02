@@ -27,17 +27,16 @@ int32_t FillConstantMapper::GetMinOpset(bool verbose) {
       onnx_dtype != ONNX_NAMESPACE::TensorProto::INT64 &&
       onnx_dtype != ONNX_NAMESPACE::TensorProto::FLOAT &&
       onnx_dtype != ONNX_NAMESPACE::TensorProto::DOUBLE) {
-    if (verbose) {
-      std::cerr << "Paddle2ONNX: Only support int32/int64/float32/float64 data "
-                   "type in fill_constant operator."
-                << std::endl;
-    }
+    Error() << "Only support int32/int64/float32/float64 data type in "
+               "fill_constant operator."
+            << std::endl;
     return -1;
   }
+  Logger(verbose, 9) << RequireOpset(9) << std::endl;
   return 9;
 }
 
-void FillConstantMapper::Opset9(OnnxHelper* helper) {
+void FillConstantMapper::Opset9() {
   auto out_info = GetOutput("Out");
   bool shape_is_tensor = HasInput("ShapeTensor") || HasInput("ShapeTensorList");
   bool value_is_tensor = HasInput("ValueTensor");
@@ -66,21 +65,21 @@ void FillConstantMapper::Opset9(OnnxHelper* helper) {
     std::string shape_name;
     if (HasInput("ShapeTensor")) {
       auto shape_info = GetInput("ShapeTensor");
-      shape_name = helper->AutoCast(shape_info[0].name, shape_info[0].dtype,
-                                    P2ODataType::INT64);
+      shape_name = helper_->AutoCast(shape_info[0].name, shape_info[0].dtype,
+                                     P2ODataType::INT64);
     } else {
       auto shape_info = GetInput("ShapeTensorList");
-      shape_name = helper->ConcatIndices(shape_info);
+      shape_name = helper_->ConcatIndices(shape_info);
     }
     // trick for tensorrt
     // ====================
-    //    auto value_tensor = helper->Constant({1},
+    //    auto value_tensor = helper_->Constant({1},
     //    GetOnnxDtype(out_info[0].dtype), value);
-    //    out = helper->MakeNode("Expand", {value_tensor,
+    //    out = helper_->MakeNode("Expand", {value_tensor,
     //    shape_name})->output(0);
     // ===================
 
-    auto node = helper->MakeNode("ConstantOfShape", {shape_name});
+    auto node = helper_->MakeNode("ConstantOfShape", {shape_name});
     auto attr = node->add_attribute();
     attr->set_name("value");
     attr->set_type(ONNX_NAMESPACE::AttributeProto::TENSOR);
@@ -112,15 +111,15 @@ void FillConstantMapper::Opset9(OnnxHelper* helper) {
   } else {
     std::vector<int64_t> shape;
     GetAttr("shape", &shape);
-    out = helper->Constant(shape, onnx_dtype, value);
+    out = helper_->Constant(shape, onnx_dtype, value);
   }
   if (value_is_tensor) {
     auto value_info = GetInput("ValueTensor");
-    std::string cast_value = helper->AutoCast(
+    std::string cast_value = helper_->AutoCast(
         value_info[0].name, value_info[0].dtype, out_info[0].dtype);
-    helper->MakeNode("Add", {out, cast_value}, {out_info[0].name});
+    helper_->MakeNode("Add", {out, cast_value}, {out_info[0].name});
   } else {
-    helper->MakeNode("Identity", {out}, {out_info[0].name});
+    helper_->MakeNode("Identity", {out}, {out_info[0].name});
   }
 }
 

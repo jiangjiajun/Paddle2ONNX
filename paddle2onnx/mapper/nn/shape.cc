@@ -17,13 +17,13 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(shape, ShapeMapper)
 
-void ShapeMapper::Opset7(OnnxHelper* helper) {
+void ShapeMapper::Opset7() {
   auto input_info = GetInput("Input");
   auto output_info = GetOutput("Out");
 
-  auto shape_out = helper->MakeNode("Shape", {input_info[0].name})->output(0);
-  helper->AutoCast(shape_out, output_info[0].name, P2ODataType::INT64,
-                   output_info[0].dtype);
+  auto shape_out = helper_->MakeNode("Shape", {input_info[0].name})->output(0);
+  helper_->AutoCast(shape_out, output_info[0].name, P2ODataType::INT64,
+                    output_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

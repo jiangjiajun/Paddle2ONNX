@@ -21,7 +21,7 @@ REGISTER_MAPPER(reduce_min, ReduceMapper)
 REGISTER_MAPPER(reduce_max, ReduceMapper)
 REGISTER_MAPPER(reduce_prod, ReduceMapper)
 
-void ReduceMapper::Opset7(OnnxHelper* helper) {
+void ReduceMapper::Opset7() {
   auto x_info = GetInput("X");
   auto out_info = GetOutput("Out");
   std::map<std::string, std::string> op_map;
@@ -31,20 +31,20 @@ void ReduceMapper::Opset7(OnnxHelper* helper) {
   op_map["reduce_max"] = "ReduceMax";
   op_map["reduce_prod"] = "ReduceProd";
   std::string out = "";
-  if (helper->GetOpsetVersion() >= 13 && OpType() == "reduce_sum") {
+  if (helper_->GetOpsetVersion() >= 13 && OpType() == "reduce_sum") {
     std::string dims = "";
     if (!reduce_all_) {
-      dims = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64, dim_);
+      dims = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64, dim_);
     } else {
-      dims = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64,
-                              Arange(0, x_info[0].Rank()));
+      dims = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                               Arange(0, x_info[0].Rank()));
     }
     auto reduce_node =
-        helper->MakeNode(op_map[OpType()], {x_info[0].name, dims});
+        helper_->MakeNode(op_map[OpType()], {x_info[0].name, dims});
     AddAttribute(reduce_node, "keepdims", static_cast<int64_t>(keep_dim_));
     out = reduce_node->output(0);
   } else {
-    auto reduce_node = helper->MakeNode(op_map[OpType()], {x_info[0].name});
+    auto reduce_node = helper_->MakeNode(op_map[OpType()], {x_info[0].name});
     if (!reduce_all_) {
       AddAttribute(reduce_node, "axes", dim_);
     } else {
@@ -54,9 +54,9 @@ void ReduceMapper::Opset7(OnnxHelper* helper) {
     out = reduce_node->output(0);
   }
   if (!keep_dim_ && out_info[0].Rank() == 1) {
-    out = helper->Reshape(out, {1});
+    out = helper_->Reshape(out, {1});
   }
-  helper->AutoCast(out, out_info[0].name, x_info[0].dtype, out_info[0].dtype);
+  helper_->AutoCast(out, out_info[0].name, x_info[0].dtype, out_info[0].dtype);
 }
 
 }  // namespace paddle2onnx

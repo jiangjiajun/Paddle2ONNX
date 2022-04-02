@@ -17,20 +17,20 @@
 namespace paddle2onnx {
 REGISTER_MAPPER(roi_align, RoiAlignMapper)
 
-void RoiAlignMapper::Opset10(OnnxHelper* helper) {
+void RoiAlignMapper::Opset10() {
   auto x_info = GetInput("X");
   auto rois_info = GetInput("ROIs");
   auto out_info = GetOutput("Out");
 
-  auto roi_shape = helper->MakeNode("Shape", {rois_info[0].name})->output(0);
+  auto roi_shape = helper_->MakeNode("Shape", {rois_info[0].name})->output(0);
   auto num_rois =
-      helper->Slice(roi_shape, std::vector<int64_t>(1, 0),
-                    std::vector<int64_t>(1, 0), std::vector<int64_t>(1, 1));
-  auto value_zero = helper->Constant(ONNX_NAMESPACE::TensorProto::INT64,
-                                     std::vector<int64_t>(1, 0));
+      helper_->Slice(roi_shape, std::vector<int64_t>(1, 0),
+                     std::vector<int64_t>(1, 0), std::vector<int64_t>(1, 1));
+  auto value_zero = helper_->Constant(ONNX_NAMESPACE::TensorProto::INT64,
+                                      std::vector<int64_t>(1, 0));
   auto batch_indices =
-      helper->MakeNode("Expand", {value_zero, num_rois})->output(0);
-  auto roi_align_node = helper->MakeNode(
+      helper_->MakeNode("Expand", {value_zero, num_rois})->output(0);
+  auto roi_align_node = helper_->MakeNode(
       "RoiAlign", {x_info[0].name, rois_info[0].name, batch_indices},
       {out_info[0].name});
   AddAttribute(roi_align_node, "output_height", pooled_height_);
