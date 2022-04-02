@@ -31,11 +31,13 @@ class P2OLogger {
  public:
   P2OLogger() {
     line_ = "";
+    prefix_ = "";
     verbose_ = true;
   }
-  explicit P2OLogger(bool verbose) {
+  explicit P2OLogger(bool verbose, const std::string& prefix) {
     verbose_ = verbose;
     line_ = "";
+    prefix_ = prefix;
   }
 
   template <typename T>
@@ -52,7 +54,7 @@ class P2OLogger {
     if (!verbose_) {
       return *this;
     }
-    std::cout << line_ << std::endl;
+    std::cout << prefix_ << " " << line_ << std::endl;
     line_ = "";
     return *this;
   }
@@ -64,6 +66,7 @@ class P2OLogger {
 
  private:
   std::string line_;
+  std::string prefix_;
   bool verbose_ = true;
 };
 
