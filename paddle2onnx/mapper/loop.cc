@@ -22,16 +22,14 @@ bool ModelExporter::IsLoopSupported(const PaddleParser& parser,
   auto x_info = parser.GetOpInput(block_id, op_id, "X");
   auto out_info = parser.GetOpOutput(block_id, op_id, "Out");
   if (x_info.size() + 1 != out_info.size()) {
-    std::cerr << "[Paddle2ONNX] Only support num(inputs except condition) == "
-                 "num(outputs) - 1 for op while."
-              << std::endl;
+    P2OLogger() << "Only support number of inputs equals to number of outputs "
+                   "for operator 'while'."
+                << std::endl;
     return false;
   }
   for (size_t i = 0; i < x_info.size(); ++i) {
     if (x_info[i].is_tensor_array) {
-      std::cerr
-          << "[Paddle2ONNX] LodTensorArray is not supported in Paddle2ONNX."
-          << std::endl;
+      P2OLogger() << "LodTensorArray is not supported." << std::endl;
       return false;
     }
   }

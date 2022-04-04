@@ -57,9 +57,10 @@ void ModelExporter::ExportOp(const PaddleParser& parser, OnnxHelper* helper,
   auto op = parser.GetOpDesc(block_id, op_id);
   if (verbose) {
     printf(
-        "\rConverting(%.2lf%%)... current operator: %s                         "
+        "\rConverting(%.2lf%%)... total number of operators is %d, current "
+        "operator: %s                         "
         "            ",
-        _current_exported_num * 100 / (_total_ops_num + 0.001),
+        _total_ops_num, _current_exported_num * 100 / (_total_ops_num + 0.001),
         op.type().c_str());
   }
   if (op.type() == "while") {
@@ -160,10 +161,9 @@ void ModelExporter::ProcessGraphDumplicateNames(
         }
         auto new_tensor_name =
             MapperHelper::Get()->GenName(renamed_tensor_name);
-        std::cerr << "[Renamer] Find dumplicate output name: "
-                  << renamed_tensor_name << " in model." << std::endl;
-        std::cerr << "[Renamer] Will rename " << renamed_tensor_name << " to "
-                  << new_tensor_name << std::endl;
+        P2OLogger() << "Find dumplicate output name '" << renamed_tensor_name
+                    << "', it will rename to '" << new_tensor_name << "'."
+                    << std::endl;
         *(item->mutable_output(i)) = new_tensor_name;
         renamer[renamed_tensor_name] = new_tensor_name;
       }
@@ -208,12 +208,12 @@ std::string ModelExporter::Run(const PaddleParser& parser, int opset_version,
 
   std::set<std::string> unsupported_ops;
   if (!CheckIfOpSupported(parser, &unsupported_ops, enable_experimental_op)) {
-    std::cerr << "Oops, there are some operators not supported by Paddle2ONNX "
-                 "yet, list as below "
-              << std::endl;
+    auto logger = P2OLogger();
+    logger << "Oops, there are some operators not supported yet, including ";
     for (auto& item : unsupported_ops) {
-      std::cerr << "=====: " << item << std::endl;
+      logger << item << ",";
     }
+    logger << std::endl;
     Assert(1 == 0,
            "Due to the unsupported operators, the conversion is aborted.");
   }
@@ -226,27 +226,26 @@ std::string ModelExporter::Run(const PaddleParser& parser, int opset_version,
   }
   if (!auto_upgrade_opset) {
     if (min_opset > opset_version) {
-      std::cerr << "This model cannot export to onnx with opset version = "
-                << opset_version
-                << ", the opset version for this model should be greater or "
-                   "equal than "
-                << min_opset << std::endl;
+      P2OLogger() << "This PaddlePaddle model is not able to export to ONNX "
+                     "with opset_version="
+                  << opset_version << ", please set the opset_version to "
+                  << min_opset << " or higher for successfully conversion."
+                  << std::endl;
       Assert(false,
              "Due to opset version, the model exporting is aborted, please set "
              "a higher opset_version or set auto_upgrade_opset=true.");
     }
   } else {
     if (min_opset > opset_version) {
-      P2OLogger(true, "[Paddle2ONNX]")
-          << "Opset version will change to " << min_opset << " from "
-          << opset_version << std::endl;
+      P2OLogger() << "Opset version will change to " << min_opset << " from "
+                  << opset_version << std::endl;
       opset_version = min_opset;
     }
   }
   _helper.SetOpsetVersion(opset_version);
-  std::cerr << "Model will exported with opset = " << _helper.GetOpsetVersion()
-            << std::endl;
-
+  P2OLogger()
+      << "This PaddlePaddle model will be exported to ONNX with opset_version="
+      << _helper.GetOpsetVersion() << "." << std::endl;
   ExportParameters(parser.params);
   ExportInputOutputs(parser.inputs, parser.outputs);
 
@@ -301,27 +300,28 @@ std::string ModelExporter::Run(const PaddleParser& parser, int opset_version,
     try {
       ONNX_NAMESPACE::checker::check_model(*(model.get()));
     } catch (...) {
-      std::cerr << "[Paddle2ONNX] ONNX model conversion is invalid."
-                << std::endl;
+      P2OLogger() << "The exported ONNX model is invalid." << std::endl;
       return "";
     }
-    std::cerr << "[Paddle2ONNX] ONNX model conversion is valid." << std::endl;
+    P2OLogger()
+        << "Congratulations, the model is exported to ONNX successfully!"
+        << std::endl;
   }
 
   std::string out;
   if (enable_optimize) {
     auto const opt_model = Optimize(*(model.get()));
     if (!opt_model.SerializeToString(&out)) {
-      if (verbose) {
-        std::cerr << "ONNX Model SerializeToString error" << std::endl;
-      }
+      P2OLogger(verbose)
+          << "Error happenedd while optimizing the exported ONNX model."
+          << std::endl;
       return "";
     }
   } else {
     if (!model->SerializeToString(&out)) {
-      if (verbose) {
-        std::cerr << "ONNX Model SerializeToString error" << std::endl;
-      }
+      P2OLogger(verbose)
+          << "Error happened while optimizing the exported ONNX model."
+          << std::endl;
       return "";
     }
   }
@@ -375,10 +375,9 @@ int32_t ModelExporter::GetMinOpset(const PaddleParser& parser, bool verbose) {
       converted_op_num += 1;
       int current_min_opset = 7;
       if (op.type() == "while") {
-        P2OLogger(verbose, "[Paddle2ONNX]")
-            << "Detected there's control flow 'while' op in your model, this "
-               "requires the minimal opset version of 13."
-            << std::endl;
+        P2OLogger() << "Detected there's control flow 'while' op in your "
+                       "model, this requires the minimal opset version of 13."
+                    << std::endl;
         current_min_opset = 13;
       } else {
         auto mapper = MapperHelper::Get()->CreateMapper(op.type(), parser,
@@ -388,14 +387,13 @@ int32_t ModelExporter::GetMinOpset(const PaddleParser& parser, bool verbose) {
       }
       if (current_min_opset < 0) {
         exportable = false;
-        if (verbose) {
-          std::cerr << "[Paddle2ONNX] Due to the operator: " << op.type()
-                    << ", this model cannot be exported." << std::endl;
-        }
+        P2OLogger(verbose) << "Due to the operator: " << op.type()
+                           << ", this model cannot be exported to ONNX."
+                           << std::endl;
       } else if (current_min_opset > max_opset) {
         max_opset = current_min_opset;
         if (verbose && current_min_opset > opset_version) {
-          verbose_log.insert("[Paddle2ONNX] Due to the operator: " + op.type() +
+          verbose_log.insert("Due to the operator: " + op.type() +
                              ", requires opset_version >= " +
                              std::to_string(current_min_opset) + ".");
         }
@@ -404,7 +402,7 @@ int32_t ModelExporter::GetMinOpset(const PaddleParser& parser, bool verbose) {
   }
   if (verbose) {
     for (auto iter = verbose_log.begin(); iter != verbose_log.end(); ++iter) {
-      std::cerr << *iter << std::endl;
+      P2OLogger() << *iter << std::endl;
     }
   }
   // If there are only feed and fetch op in Paddle model
@@ -418,12 +416,10 @@ int32_t ModelExporter::GetMinOpset(const PaddleParser& parser, bool verbose) {
   int32_t max_support_opset = MAX_ONNX_OPSET_VERSION;
   if (exportable && (max_opset > MAX_ONNX_OPSET_VERSION)) {
     exportable = false;
-    if (verbose) {
-      std::cerr << "[ERROR] The compiled onnx version only support opset 7~"
+    P2OLogger() << "[ERROR] The compiled ONNX version only supports opset 7~"
                 << MAX_ONNX_OPSET_VERSION
-                << ", but now this model need at least opset " << max_opset
-                << ", please compile with higher version of onnx." << std::endl;
-    }
+                << ", but now this model need as least opset " << max_opset
+                << ", please compile with higher version of ONNX." << std::endl;
   }
   if (exportable) {
     return max_opset;

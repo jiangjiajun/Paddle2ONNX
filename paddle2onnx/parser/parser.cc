@@ -26,8 +26,8 @@ bool PaddleParser::LoadProgram(const std::string& model,
   prog = std::make_shared<paddle2onnx::framework::proto::ProgramDesc>();
   if (from_memory_buffer) {
     if (!prog->ParseFromString(model)) {
-      std::cerr << "Fail to parse Paddle model from memory buffer."
-                << std::endl;
+      P2OLogger() << "Failed to parse PaddlePaddle model from memory buffer."
+                  << std::endl;
       return false;
     }
     return true;
@@ -35,9 +35,9 @@ bool PaddleParser::LoadProgram(const std::string& model,
 
   std::ifstream fin(model, std::ios::in | std::ios::binary);
   if (!fin.is_open()) {
-    std::cerr << "Fail to read model file " << model
-              << ", please make sure your model file or file path is valid."
-              << std::endl;
+    P2OLogger() << "Failed to read model file: " << model
+                << ", please make sure your model file or file path is valid."
+                << std::endl;
     return false;
   }
 
@@ -51,7 +51,8 @@ bool PaddleParser::LoadProgram(const std::string& model,
 
   prog = std::make_shared<paddle2onnx::framework::proto::ProgramDesc>();
   if (!prog->ParseFromString(contents)) {
-    std::cerr << "Fail to parse Paddle model content." << std::endl;
+    P2OLogger() << "Failed to parse paddlepaddle model from read content."
+                << std::endl;
     return false;
   }
   return true;
@@ -66,8 +67,9 @@ bool PaddleParser::GetParamNames(std::vector<std::string>* var_names) {
     for (auto j = 0; j < vars_size; ++j) {
       auto type = block.vars(j).type().type();
       if (type == framework::proto::VarType_Type::VarType_Type_SELECTED_ROWS) {
-        std::cerr << "VarType of SELECTED_ROWS is not supported by Paddle2ONNX."
-                  << std::endl;
+        P2OLogger()
+            << "VarType of SELECTED_ROWS is not supported by Paddle2ONNX."
+            << std::endl;
         return false;
       }
       if (type == framework::proto::VarType_Type::VarType_Type_FEED_MINIBATCH) {
@@ -107,9 +109,9 @@ bool PaddleParser::LoadParamsFromMemoryBuffer(
   while (read_size < total_size) {
     auto index = params.size();
     if (index >= var_names.size()) {
-      std::cerr << "Paddle2ONNX: Unexcept situation happened, index should "
-                   "less than size of var_names."
-                << std::endl;
+      P2OLogger() << "Unexcepted situation happend, while reading the "
+                     "parameters of PaddlePaddle model."
+                  << std::endl;
       return false;
     }
 
@@ -128,8 +130,7 @@ bool PaddleParser::LoadParamsFromMemoryBuffer(
                          read_size);
       read_size += sizeof(lod_level);
       if (lod_level != 0) {
-        std::cerr << "Paddle2ONNX: Only supports weight with lod_level = 0."
-                  << std::endl;
+        P2OLogger() << "Only supports weight with lod_level = 0." << std::endl;
         return false;
       }
     }
@@ -180,7 +181,7 @@ bool PaddleParser::LoadParams(const std::string& path) {
   params.clear();
   std::ifstream is(path, std::ios::in | std::ios::binary);
   if (!is.is_open()) {
-    std::cerr << "Cannot open file " << path << " to read." << std::endl;
+    P2OLogger() << "Cannot open file " << path << " to read." << std::endl;
     return false;
   }
   is.seekg(0, std::ios::end);
@@ -243,9 +244,9 @@ bool PaddleParser::LoadParams(const std::string& path) {
       is.read(weight.buffer.data(), numel * PaddleDataTypeSize(data_type));
       auto index = params.size();
       if (index >= var_names.size()) {
-        std::cerr << "Paddle2ONNX: Unexcept situation happened, index should "
-                     "less than size of var_names."
-                  << std::endl;
+        P2OLogger() << "Unexcepted situation happend while reading parameters "
+                       "of PaddlePaddle model."
+                    << std::endl;
         return false;
       }
       params[var_names[index]] = weight;
@@ -282,7 +283,7 @@ bool PaddleParser::Init(const std::string& _model, const std::string& _params,
                         bool from_memory_buffer) {
   std::vector<Weight> weights;
   if (!LoadProgram(_model, from_memory_buffer)) {
-    std::cerr << "Paddle2ONNX: Load program failed!." << std::endl;
+    P2OLogger() << "Failed to load program of PaddlePaddle model." << std::endl;
     return false;
   }
   if (_params != "") {
@@ -293,13 +294,14 @@ bool PaddleParser::Init(const std::string& _model, const std::string& _params,
       ret = LoadParams(_params);
     }
     if (!ret) {
-      std::cerr << "Paddle2ONNX: Load parameters failed!." << std::endl;
+      P2OLogger() << "Failed to load parameters of PaddlePaddle model."
+                  << std::endl;
       return false;
     }
   } else {
-    std::cerr << "[WARNING] You haven't set a params file, this only valid "
-                 "while the model has no weights."
-              << std::endl;
+    P2OLogger() << "[WARN] You haven't set a parameters file, this is only "
+                   "valid while the model contains no weights."
+                << std::endl;
   }
 
   //  if (ExistsDumplicateTensorName()) {
@@ -476,8 +478,8 @@ void PaddleParser::GetOpAttr(const paddle2onnx::framework::proto::OpDesc& op,
     if (op.attrs(i).name() == name) {
       found = true;
       Assert(op.attrs(i).has_i() || op.attrs(i).has_l(),
-             "Cannot find int32/int64 data from attr: " + name +
-                 " in op:" + op.type());
+             "Cannot find int32/int64 data from attr: " + name + " in op:" +
+                 op.type());
       if (op.attrs(i).has_i()) {
         *res = (int64_t)(op.attrs(i).i());
       } else {
@@ -568,8 +570,8 @@ void PaddleParser::GetOpAttr(const paddle2onnx::framework::proto::OpDesc& op,
   for (auto i = 0; i < op.attrs_size(); ++i) {
     if (op.attrs(i).name() == name) {
       Assert(op.attrs(i).floats_size() >= 0,
-             "Cannot find list of float data from attr: " + name +
-                 " in op: " + op.type());
+             "Cannot find list of float data from attr: " + name + " in op: " +
+                 op.type());
       found = true;
       for (auto j = 0; j < op.attrs(i).floats_size(); ++j) {
         res->push_back(static_cast<float>(op.attrs(i).floats(j)));
@@ -588,8 +590,8 @@ void PaddleParser::GetOpAttr(const paddle2onnx::framework::proto::OpDesc& op,
   for (auto i = 0; i < op.attrs_size(); ++i) {
     if (op.attrs(i).name() == name) {
       Assert(op.attrs(i).float64s_size() >= 0,
-             "Cannot find list of double data from attr: " + name +
-                 " in op: " + op.type());
+             "Cannot find list of double data from attr: " + name + " in op: " +
+                 op.type());
       found = true;
       for (auto j = 0; j < op.attrs(i).float64s_size(); ++j) {
         res->push_back(static_cast<double>(op.attrs(i).float64s(j)));
@@ -662,9 +664,9 @@ bool PaddleParser::ExistsDumplicateTensorName() const {
           continue;
         }
         if (names.find(op.outputs(j).arguments(k)) != names.end()) {
-          std::cerr << "[Paddle2ONNX] There's dumplicate output name: "
-                    << op.outputs(j).arguments(k)
-                    << " in this model, not supported yet." << std::endl;
+          P2OLogger() << "There's dumplicate output name: "
+                      << op.outputs(j).arguments(k)
+                      << " in this model, not supported yet." << std::endl;
           return true;
         }
         names.insert(op.outputs(j).arguments(k));

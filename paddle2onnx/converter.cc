@@ -42,9 +42,7 @@ PADDLE2ONNX_DECL bool IsExportable(
       me.Run(parser, opset_version, auto_upgrade_opset, verbose,
              enable_onnx_checker, enable_experimental_op, enable_optimize);
   if (onnx_model.empty()) {
-    if (verbose) {
-      std::cerr << "ONNX model is invalid." << std::endl;
-    }
+    P2OLogger(verbose) << "The exported ONNX model is invalid!" << std::endl;
     return false;
   }
   return true;
@@ -58,22 +56,16 @@ PADDLE2ONNX_DECL bool Export(const std::string& model,
                              bool enable_experimental_op,
                              bool enable_optimize) {
   auto parser = PaddleParser();
-  if (verbose) {
-    std::cerr << "Start to parsing Paddle model..." << std::endl;
-  }
+  P2OLogger(verbose) << "Start to parsing Paddle model..." << std::endl;
   if (!parser.Init(model, params, from_memory_buffer)) {
-    if (verbose) {
-      std::cerr << "Paddle model parsing failed." << std::endl;
-    }
+    P2OLogger(verbose) << "Paddle model parsing failed." << std::endl;
     return false;
   }
   paddle2onnx::ModelExporter me;
   *out = me.Run(parser, opset_version, auto_upgrade_opset, verbose,
                 enable_onnx_checker, enable_experimental_op, enable_optimize);
   if (out->empty()) {
-    if (verbose) {
-      std::cerr << "ONNX model is invalid." << std::endl;
-    }
+    P2OLogger(verbose) << "The exported ONNX model is invalid!" << std::endl;
     return false;
   }
   return true;

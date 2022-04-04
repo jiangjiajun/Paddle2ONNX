@@ -37,10 +37,11 @@ class P2OLogger {
  public:
   P2OLogger() {
     line_ = "";
-    prefix_ = "";
+    prefix_ = "[Paddle2ONNX]";
     verbose_ = true;
   }
-  explicit P2OLogger(bool verbose, const std::string& prefix = "") {
+  explicit P2OLogger(bool verbose,
+                     const std::string& prefix = "[Paddle2ONNX]") {
     verbose_ = verbose;
     line_ = "";
     prefix_ = prefix;

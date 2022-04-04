@@ -14,9 +14,6 @@
 
 #include "paddle2onnx/mapper/tensor/squeeze2.h"
 
-#include <string>
-#include <vector>
-
 namespace paddle2onnx {
 REGISTER_MAPPER(squeeze2, Squeeze2Mapper)
 
