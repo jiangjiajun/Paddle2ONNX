@@ -48,19 +48,25 @@ void ClipMapper::Opset7() {
     if (has_max_tensor_input) {
       auto max_info = GetInput("Max");
       max_name = helper_->AutoCast(max_info[0].name, max_info[0].dtype, dtype);
+      if (max_info[0].Rank() > 0) {
+        max_name = helper_->Squeeze(max_name, {});
+      }
     } else {
       float max_val;
       GetAttr("max", &max_val);
-      max_name = helper_->Constant({1}, GetOnnxDtype(dtype), max_val);
+      max_name = helper_->Constant({}, GetOnnxDtype(dtype), max_val);
     }
     std::string min_name;
     if (has_min_tensor_input) {
       auto min_info = GetInput("Min");
       min_name = helper_->AutoCast(min_info[0].name, min_info[0].dtype, dtype);
+      if (min_info[0].Rank() > 0) {
+        min_name = helper_->Squeeze(min_name, {});
+      }
     } else {
       float min_val;
       GetAttr("min", &min_val);
-      min_name = helper_->Constant({1}, GetOnnxDtype(dtype), min_val);
+      min_name = helper_->Constant({}, GetOnnxDtype(dtype), min_val);
     }
     if (dtype_converted) {
       auto node = helper_->MakeNode("Clip", {input_name, min_name, max_name});

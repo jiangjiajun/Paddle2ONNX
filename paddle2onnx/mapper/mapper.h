@@ -76,14 +76,16 @@ class Mapper {
   // checking after model exported.
   virtual void MarkAsExperimentalOp() { is_experimental_op_ = true; }
   virtual bool IsExperimentalOp() const { return is_experimental_op_; }
-  // the return value in [7, 15], represent the minimum opset_version
+  // the return value in [7, MAX_ONNX_OPSET_VERSION], represent the minimum
+  // opset_version
   // if return value < 0, means the op is not supported.
   virtual int32_t GetMinOpset(bool verbose = false) { return 7; }
 
   void Run() {
     int32_t opset_version = helper_->GetOpsetVersion();
-    Assert(opset_version >= 7 && opset_version <= 15,
-           "[Paddle2ONNX] Only support opset_version in range of [7, 15].");
+    Assert(opset_version >= 7 && opset_version <= MAX_ONNX_OPSET_VERSION,
+           "[Paddle2ONNX] Only support opset_version in range of [7, " +
+               std::to_string(MAX_ONNX_OPSET_VERSION) + "].");
     if (opset_version == 15) {
       Opset15();
     } else if (opset_version == 14) {

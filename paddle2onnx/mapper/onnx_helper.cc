@@ -254,9 +254,9 @@ std::string OnnxHelper::Clip(const std::string& input,
     return res;
   } else {
     int32_t dtype = P2ODataType::FP32;
-    std::string min_name = Constant({1}, GetOnnxDtype(dtype), min);
+    std::string min_name = Constant({}, GetOnnxDtype(dtype), min);
     std::string max_name;
-    max_name = Constant({1}, GetOnnxDtype(dtype), max);
+    max_name = Constant({}, GetOnnxDtype(dtype), max);
     auto node = MakeNode("Clip", {input_name, min_name, max_name});
     auto res = AutoCast(node->output(0), {output}, P2ODataType::FP32, in_dtype);
     return res;
